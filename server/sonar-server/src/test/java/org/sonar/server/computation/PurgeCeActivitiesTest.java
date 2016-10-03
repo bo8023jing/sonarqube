@@ -34,7 +34,7 @@ import static org.mockito.Mockito.mock;
 
 public class PurgeCeActivitiesTest {
 
-  private TestSystem2 system2 = new TestSystem2();
+  private TestSystem2 system2 = new TestSystem2().setNow(1_500_000_000_100L);
 
   @Rule
   public DbTester dbTester = DbTester.create(system2);
@@ -45,7 +45,6 @@ public class PurgeCeActivitiesTest {
   public void delete_older_than_6_months() throws Exception {
     insertWithDate("VERY_OLD", 1_000_000_000_000L);
     insertWithDate("RECENT", 1_500_000_000_000L);
-    system2.setNow(1_500_000_000_100L);
 
     underTest.onServerStart(mock(Server.class));
 
