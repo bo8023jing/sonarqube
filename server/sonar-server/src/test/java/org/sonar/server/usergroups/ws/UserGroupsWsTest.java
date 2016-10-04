@@ -42,7 +42,7 @@ public class UserGroupsWsTest {
   public void setUp() {
     WsTester tester = new WsTester(new UserGroupsWs(
       new SearchAction(mock(DbClient.class), mock(UserSession.class)),
-      new CreateAction(mock(DbClient.class), mock(UserSession.class), mock(UserGroupUpdater.class))));
+      new CreateAction(mock(DbClient.class), mock(UserSession.class), mock(GroupWsSupport.class))));
     controller = tester.controller("api/user_groups");
   }
 
@@ -68,6 +68,6 @@ public class UserGroupsWsTest {
     assertThat(action).isNotNull();
     assertThat(action.isPost()).isTrue();
     assertThat(action.responseExampleAsString()).isNotEmpty();
-    assertThat(action.params()).hasSize(2);
+    assertThat(action.params()).hasSize(3);
   }
 }

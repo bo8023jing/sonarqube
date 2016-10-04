@@ -34,13 +34,14 @@ import org.sonar.db.user.UserDto;
 import org.sonar.db.user.UserGroupDto;
 import org.sonar.server.exceptions.ForbiddenException;
 import org.sonar.server.exceptions.NotFoundException;
+import org.sonar.server.organization.DefaultOrganizationProviderRule;
 import org.sonar.server.tester.UserSessionRule;
 import org.sonar.server.ws.WsTester;
 import org.sonar.server.ws.WsTester.TestRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.PARAM_GROUP_NAME;
-
+import static org.sonar.db.user.GroupTesting.newGroupDto;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_GROUP_NAME;
 
 public class UsersActionTest {
 
@@ -48,6 +49,8 @@ public class UsersActionTest {
   public DbTester db = DbTester.create(System2.INSTANCE);
   @Rule
   public UserSessionRule userSession = UserSessionRule.standalone();
+  @Rule
+  public DefaultOrganizationProviderRule defaultOrganizationProvider = DefaultOrganizationProviderRule.create(db);
 
   WsTester wsTester;
   DbClient dbClient;
@@ -57,12 +60,12 @@ public class UsersActionTest {
   public void setUp() {
     dbClient = db.getDbClient();
     dbSession = db.getSession();
-
+    GroupWsSupport groupSupport = new GroupWsSupport(db.getDbClient(), defaultOrganizationProvider);
     wsTester = new WsTester(new UserGroupsWs(
       new UsersAction(
         dbClient,
-        new UserGroupFinder(dbClient),
-        userSession)));
+        userSession,
+        groupSupport)));
     userSession.login("admin").setGlobalPermissions(GlobalPermissions.SYSTEM_ADMIN);
 
   }
@@ -97,9 +100,9 @@ public class UsersActionTest {
   @Test
   public void all_users() throws Exception {
     GroupDto group = insertGroup();
-    UserDto groupUser = insertUser("ada", "Ada Lovelace");
+    UserDto user = insertUser("ada", "Ada Lovelace");
+    addUserToGroup(user, group);
     insertUser("grace", "Grace Hopper");
-    addUserToGroup(groupUser, group);
     dbSession.commit();
 
     newUsersRequest()
@@ -211,8 +214,8 @@ public class UsersActionTest {
   }
 
   private GroupDto insertGroup() {
-    return dbClient.groupDao().insert(dbSession, new GroupDto()
-      .setName("sonar-users"));
+    GroupDto group = newGroupDto().setName("sonar-users").setOrganizationUuid(defaultOrganizationProvider.get().getUuid());
+    return dbClient.groupDao().insert(dbSession, group);
   }
 
   private UserDto insertUser(String login, String name) {

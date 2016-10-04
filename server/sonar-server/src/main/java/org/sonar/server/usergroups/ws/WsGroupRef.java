@@ -21,7 +21,6 @@ package org.sonar.server.usergroups.ws;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
-import org.sonar.api.server.ws.Request;
 
 import static org.sonar.server.ws.WsUtils.checkRequest;
 
@@ -41,13 +40,6 @@ public class WsGroupRef {
   }
 
   public static WsGroupRef newWsGroupRef(@Nullable Long id, @Nullable String name) {
-    return new WsGroupRef(id, name);
-  }
-
-  public static WsGroupRef newWsGroupRefFromUserGroupRequest(Request wsRequest) {
-    Long id = wsRequest.paramAsLong(UserGroupsWsParameters.PARAM_GROUP_ID);
-    String name = wsRequest.param(UserGroupsWsParameters.PARAM_GROUP_NAME);
-
     return new WsGroupRef(id, name);
   }
 
