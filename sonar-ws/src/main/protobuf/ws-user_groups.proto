@@ -29,6 +29,11 @@ message CreateResponse {
   optional Group group = 1;
 }
 
+// WS api/user_groups/update
+message UpdateResponse {
+  optional Group group = 1;
+}
+
 message Group {
   optional int64 id = 1;
   optional string organizationKey = 2;
