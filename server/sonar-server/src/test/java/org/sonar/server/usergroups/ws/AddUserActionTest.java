@@ -20,60 +20,51 @@
 package org.sonar.server.usergroups.ws;
 
 import com.google.common.collect.Multimap;
-import java.util.Arrays;
-import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.sonar.api.utils.System2;
 import org.sonar.core.permission.GlobalPermissions;
-import org.sonar.db.DbClient;
 import org.sonar.db.DbSession;
 import org.sonar.db.DbTester;
-import org.sonar.db.user.GroupDao;
+import org.sonar.db.organization.OrganizationDto;
 import org.sonar.db.user.GroupDto;
-import org.sonar.db.user.GroupMembershipDao;
-import org.sonar.db.user.UserDao;
 import org.sonar.db.user.UserDto;
-import org.sonar.db.user.UserGroupDao;
 import org.sonar.db.user.UserGroupDto;
 import org.sonar.server.exceptions.NotFoundException;
+import org.sonar.server.organization.DefaultOrganizationProviderImpl;
 import org.sonar.server.tester.UserSessionRule;
 import org.sonar.server.ws.WsTester;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.PARAM_GROUP_NAME;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.PARAM_LOGIN;
-
+import static org.sonar.db.organization.OrganizationTesting.newOrganizationDto;
+import static org.sonar.db.user.GroupTesting.newGroupDto;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_GROUP_NAME;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_LOGIN;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_ORGANIZATION_KEY;
 
 public class AddUserActionTest {
 
   @Rule
   public DbTester db = DbTester.create(System2.INSTANCE);
   @Rule
-  public final UserSessionRule userSession = UserSessionRule.standalone();
+  public UserSessionRule userSession = UserSessionRule.standalone();
   @Rule
-  public final ExpectedException expectedException = ExpectedException.none();
+  public ExpectedException expectedException = ExpectedException.none();
 
+  private OrganizationDto organization = newOrganizationDto();
   private WsTester ws;
-  private GroupDao groupDao;
-  private UserDao userDao;
-  private GroupMembershipDao groupMembershipDao;
-  private UserGroupDao userGroupDao;
   private DbSession dbSession;
 
   @Before
   public void setUp() {
     dbSession = db.getSession();
-    DbClient dbClient = db.getDbClient();
+    db.getDbClient().organizationDao().insert(dbSession, organization);
 
-    groupDao = dbClient.groupDao();
-    userDao = dbClient.userDao();
-    groupMembershipDao = dbClient.groupMembershipDao();
-    userGroupDao = dbClient.userGroupDao();
-
-    ws = new WsTester(new UserGroupsWs(new AddUserAction(dbClient, new UserGroupFinder(dbClient), userSession)));
+    GroupWsSupport groupSupport = new GroupWsSupport(db.getDbClient(), new DefaultOrganizationProviderImpl(db.getDbClient()));
+    ws = new WsTester(new UserGroupsWs(new AddUserAction(db.getDbClient(), userSession, groupSupport)));
   }
 
   @Test
@@ -89,26 +80,27 @@ public class AddUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(groupMembershipDao.selectGroupsByLogins(dbSession, Arrays.asList(user.getLogin())).get(user.getLogin()))
+    assertThat(db.getDbClient().groupMembershipDao().selectGroupsByLogins(dbSession, asList(user.getLogin())).get(user.getLogin()))
       .containsOnly(group.getName());
   }
 
   @Test
   public void add_user_with_group_name() throws Exception {
-    GroupDto group = insertGroup("group_name");
+    GroupDto group = insertGroup("a-group");
     UserDto user = insertUser("user_login");
-    assertThat(groupMembershipDao.selectGroupsByLogins(dbSession, Arrays.asList(user.getLogin())).get(user.getLogin()))
+    assertThat(db.getDbClient().groupMembershipDao().selectGroupsByLogins(dbSession, asList(user.getLogin())).get(user.getLogin()))
       .isEmpty();
     dbSession.commit();
 
     userSession.login("admin").setGlobalPermissions(GlobalPermissions.SYSTEM_ADMIN);
     newRequest()
+      .setParam(PARAM_ORGANIZATION_KEY, organization.getKey())
       .setParam(PARAM_GROUP_NAME, group.getName())
       .setParam(PARAM_LOGIN, user.getLogin())
       .execute()
       .assertNoContent();
 
-    assertThat(groupMembershipDao.selectGroupsByLogins(dbSession, Arrays.asList(user.getLogin())).get(user.getLogin()))
+    assertThat(db.getDbClient().groupMembershipDao().selectGroupsByLogins(dbSession, asList(user.getLogin())).get(user.getLogin()))
       .containsOnly(group.getName());
   }
 
@@ -127,7 +119,7 @@ public class AddUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(groupMembershipDao.selectGroupsByLogins(dbSession, Arrays.asList(user.getLogin())).get(user.getLogin()))
+    assertThat(db.getDbClient().groupMembershipDao().selectGroupsByLogins(dbSession, asList(user.getLogin())).get(user.getLogin()))
       .containsOnly(admins.getName(), users.getName());
   }
 
@@ -145,7 +137,7 @@ public class AddUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(groupMembershipDao.selectGroupsByLogins(dbSession, Arrays.asList(user.getLogin())).get(user.getLogin()))
+    assertThat(db.getDbClient().groupMembershipDao().selectGroupsByLogins(dbSession, asList(user.getLogin())).get(user.getLogin()))
       .containsOnly(users.getName());
   }
 
@@ -164,7 +156,7 @@ public class AddUserActionTest {
       .execute()
       .assertNoContent();
 
-    Multimap<String, String> groupsByLogins = groupMembershipDao.selectGroupsByLogins(dbSession, Arrays.asList(user1.getLogin(), user2.getLogin()));
+    Multimap<String, String> groupsByLogins = db.getDbClient().groupMembershipDao().selectGroupsByLogins(dbSession, asList(user1.getLogin(), user2.getLogin()));
     assertThat(groupsByLogins.get(user1.getLogin())).containsOnly(users.getName());
     assertThat(groupsByLogins.get(user2.getLogin())).containsOnly(users.getName());
   }
@@ -201,17 +193,17 @@ public class AddUserActionTest {
     return ws.newPostRequest("api/user_groups", "add_user");
   }
 
-  private GroupDto insertGroup(String groupName) {
-    return groupDao.insert(dbSession, new GroupDto()
-      .setName(groupName)
-      .setDescription(StringUtils.capitalize(groupName)));
+  private GroupDto insertGroup(String name) {
+    GroupDto group = newGroupDto().setName(name).setOrganizationUuid(organization.getUuid());
+    db.getDbClient().groupDao().insert(dbSession, group);
+    return group;
   }
 
   private UserDto insertUser(String login) {
-    return userDao.insert(dbSession, new UserDto().setLogin(login).setName(login).setActive(true));
+    return db.getDbClient().userDao().insert(dbSession, new UserDto().setLogin(login).setName(login).setActive(true));
   }
 
   private void insertMember(long groupId, long userId) {
-    userGroupDao.insert(dbSession, new UserGroupDto().setGroupId(groupId).setUserId(userId));
+    db.getDbClient().userGroupDao().insert(dbSession, new UserGroupDto().setGroupId(groupId).setUserId(userId));
   }
 }

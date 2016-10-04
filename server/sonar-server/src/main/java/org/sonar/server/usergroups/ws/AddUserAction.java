@@ -19,7 +19,6 @@
  */
 package org.sonar.server.usergroups.ws;
 
-import java.util.Arrays;
 import org.sonar.api.server.ws.Request;
 import org.sonar.api.server.ws.Response;
 import org.sonar.api.server.ws.WebService.NewAction;
@@ -34,23 +33,24 @@ import org.sonar.server.exceptions.NotFoundException;
 import org.sonar.server.user.UserSession;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static org.sonar.db.MyBatis.closeQuietly;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.PARAM_GROUP_ID;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.PARAM_GROUP_NAME;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.PARAM_LOGIN;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.createGroupParameters;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.createLoginParameter;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_GROUP_ID;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_GROUP_NAME;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_LOGIN;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.defineWsGroupParameters;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.defineWsLoginParameter;
 
 public class AddUserAction implements UserGroupsWsAction {
 
   private final DbClient dbClient;
-  private final UserGroupFinder userGroupFinder;
   private final UserSession userSession;
+  private final GroupWsSupport support;
 
-  public AddUserAction(DbClient dbClient, UserGroupFinder userGroupFinder, UserSession userSession) {
+  public AddUserAction(DbClient dbClient, UserSession userSession, GroupWsSupport support) {
     this.dbClient = dbClient;
-    this.userGroupFinder = userGroupFinder;
     this.userSession = userSession;
+    this.support = support;
   }
 
   @Override
@@ -62,29 +62,27 @@ public class AddUserAction implements UserGroupsWsAction {
       .setPost(true)
       .setSince("5.2");
 
-    createGroupParameters(action);
-    createLoginParameter(action);
+    defineWsGroupParameters(action);
+    defineWsLoginParameter(action);
   }
 
   @Override
   public void handle(Request request, Response response) throws Exception {
     userSession.checkLoggedIn().checkPermission(GlobalPermissions.SYSTEM_ADMIN);
 
-    WsGroupRef wsGroupRef = WsGroupRef.newWsGroupRefFromUserGroupRequest(request);
-    String login = request.mandatoryParam(PARAM_LOGIN);
-
     DbSession dbSession = dbClient.openSession(false);
     try {
-      GroupDto group = userGroupFinder.getGroup(dbSession, wsGroupRef);
+      GroupDto group = support.findGroup(dbSession, request);
 
+      String login = request.mandatoryParam(PARAM_LOGIN);
       UserDto user = dbClient.userDao().selectActiveUserByLogin(dbSession, login);
       if (user == null) {
         throw new NotFoundException(format("Could not find a user with login '%s'", login));
       }
 
       if (userIsNotYetMemberOf(dbSession, login, group)) {
-        UserGroupDto userGroup = new UserGroupDto().setGroupId(group.getId()).setUserId(user.getId());
-        dbClient.userGroupDao().insert(dbSession, userGroup);
+        UserGroupDto membershipDto = new UserGroupDto().setGroupId(group.getId()).setUserId(user.getId());
+        dbClient.userGroupDao().insert(dbSession, membershipDto);
         dbSession.commit();
       }
 
@@ -96,6 +94,6 @@ public class AddUserAction implements UserGroupsWsAction {
   }
 
   private boolean userIsNotYetMemberOf(DbSession dbSession, String login, GroupDto group) {
-    return !dbClient.groupMembershipDao().selectGroupsByLogins(dbSession, Arrays.asList(login)).get(login).contains(group.getName());
+    return !dbClient.groupMembershipDao().selectGroupsByLogins(dbSession, asList(login)).get(login).contains(group.getName());
   }
 }
