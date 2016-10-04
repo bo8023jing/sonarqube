@@ -19,8 +19,6 @@
  */
 package org.sonar.server.usergroups.ws;
 
-import javax.annotation.CheckForNull;
-import org.sonar.api.security.DefaultGroups;
 import org.sonar.api.server.ws.Request;
 import org.sonar.api.server.ws.Response;
 import org.sonar.api.server.ws.WebService.NewAction;
@@ -34,23 +32,23 @@ import org.sonar.db.user.UserGroupDto;
 import org.sonar.server.user.UserSession;
 
 import static java.lang.String.format;
-import static org.sonar.api.security.DefaultGroups.isAnyone;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.PARAM_GROUP_ID;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.PARAM_GROUP_NAME;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.PARAM_LOGIN;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.createGroupParameters;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.createLoginParameter;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_GROUP_ID;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_GROUP_NAME;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_LOGIN;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.defineWsGroupParameters;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.defineWsLoginParameter;
 import static org.sonar.server.ws.WsUtils.checkFound;
-import static org.sonar.server.ws.WsUtils.checkRequest;
 
 public class RemoveUserAction implements UserGroupsWsAction {
 
   private final DbClient dbClient;
   private final UserSession userSession;
+  private final GroupWsSupport support;
 
-  public RemoveUserAction(DbClient dbClient, UserSession userSession) {
+  public RemoveUserAction(DbClient dbClient, UserSession userSession, GroupWsSupport support) {
     this.dbClient = dbClient;
     this.userSession = userSession;
+    this.support = support;
   }
 
   @Override
@@ -62,59 +60,29 @@ public class RemoveUserAction implements UserGroupsWsAction {
       .setPost(true)
       .setSince("5.2");
 
-    createGroupParameters(action);
-    createLoginParameter(action);
+    defineWsGroupParameters(action);
+    defineWsLoginParameter(action);
   }
 
   @Override
   public void handle(Request request, Response response) throws Exception {
     userSession.checkLoggedIn().checkPermission(GlobalPermissions.SYSTEM_ADMIN);
 
-    WsGroupRef wsGroupRef = WsGroupRef.newWsGroupRefFromUserGroupRequest(request);
-    String login = request.mandatoryParam(PARAM_LOGIN);
-
     DbSession dbSession = dbClient.openSession(false);
     try {
-      GroupDto group = getGroup(dbSession, wsGroupRef);
-      checkRequest(group != null, "It is not possible to remove a user from the '%s' group.", DefaultGroups.ANYONE);
+      GroupDto group = support.findGroup(dbSession, request);
+
+      String login = request.mandatoryParam(PARAM_LOGIN);
       UserDto user = getUser(dbSession, login);
 
-      UserGroupDto userGroup = new UserGroupDto().setGroupId(group.getId()).setUserId(user.getId());
-      dbClient.userGroupDao().delete(dbSession, userGroup);
+      UserGroupDto membershipDto = new UserGroupDto().setGroupId(group.getId()).setUserId(user.getId());
+      dbClient.userGroupDao().delete(dbSession, membershipDto);
       dbSession.commit();
+
       response.noContent();
     } finally {
       dbClient.closeSession(dbSession);
     }
-
-  }
-
-  /**
-   *
-   * @return null if it's the anyone group
-   */
-  @CheckForNull
-  private GroupDto getGroup(DbSession dbSession, WsGroupRef group) {
-    Long groupId = group.id();
-    String groupName = group.name();
-
-    if (isAnyone(groupName)) {
-      return null;
-    }
-
-    GroupDto groupDto = null;
-
-    if (groupId != null) {
-      groupDto = checkFound(dbClient.groupDao().selectById(dbSession, groupId),
-        "Group with id '%d' is not found", groupId);
-    }
-
-    if (groupName != null) {
-      groupDto = checkFound(dbClient.groupDao().selectByName(dbSession, groupName),
-        "Group with name '%s' is not found", groupName);
-    }
-
-    return groupDto;
   }
 
   private UserDto getUser(DbSession dbSession, String userLogin) {
