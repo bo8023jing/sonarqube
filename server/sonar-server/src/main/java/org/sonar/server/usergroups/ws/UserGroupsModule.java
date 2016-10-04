@@ -27,7 +27,7 @@ public class UserGroupsModule extends Module {
   protected void configureModule() {
     add(
       UserGroupsWs.class,
-      UserGroupUpdater.class,
+      GroupWsSupport.class,
       UserGroupFinder.class,
       // actions
       SearchAction.class,

@@ -19,7 +19,6 @@
  */
 package org.sonar.server.usergroups.ws;
 
-import java.net.HttpURLConnection;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -27,18 +26,23 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.sonar.api.utils.System2;
 import org.sonar.core.permission.GlobalPermissions;
-import org.sonar.db.DbClient;
 import org.sonar.db.DbSession;
 import org.sonar.db.DbTester;
-import org.sonar.db.user.GroupDao;
+import org.sonar.db.organization.OrganizationTesting;
 import org.sonar.db.user.GroupDto;
+import org.sonar.db.user.GroupTesting;
 import org.sonar.server.exceptions.ForbiddenException;
 import org.sonar.server.exceptions.ServerException;
+import org.sonar.server.organization.DefaultOrganizationProviderRule;
 import org.sonar.server.tester.UserSessionRule;
 import org.sonar.server.ws.WsTester;
 
+import static org.sonar.db.organization.OrganizationTesting.newOrganizationDto;
+
 
 public class CreateActionTest {
+
+  private static final String AN_ORGANIZATION_KEY = "an-org";
 
   @Rule
   public DbTester db = DbTester.create(System2.INSTANCE);
@@ -46,33 +50,52 @@ public class CreateActionTest {
   public UserSessionRule userSession = UserSessionRule.standalone();
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
-
+  @Rule
+  public DefaultOrganizationProviderRule defaultOrganizationProvider = DefaultOrganizationProviderRule.create(db);
   private WsTester ws;
-  private GroupDao groupDao;
   private DbSession dbSession;
 
   @Before
   public void setUp() {
-    DbClient dbClient = db.getDbClient();
-    groupDao = dbClient.groupDao();
     dbSession = db.getSession();
 
-    ws = new WsTester(new UserGroupsWs(new CreateAction(dbClient, userSession, new UserGroupUpdater(dbClient))));
+    GroupWsSupport groupSupport = new GroupWsSupport(db.getDbClient(), defaultOrganizationProvider);
+    ws = new WsTester(new UserGroupsWs(new CreateAction(db.getDbClient(), userSession, groupSupport)));
   }
 
   @Test
-  public void create_nominal() throws Exception {
+  public void create_group_on_default_organization() throws Exception {
     loginAsAdmin();
     newRequest()
       .setParam("name", "some-product-bu")
       .setParam("description", "Business Unit for Some Awesome Product")
       .execute().assertJson("{" +
         "  \"group\": {" +
+        "    \"organizationKey\": \"" + defaultOrganizationProvider.get().getKey() + "\"," +
         "    \"name\": \"some-product-bu\"," +
         "    \"description\": \"Business Unit for Some Awesome Product\"," +
         "    \"membersCount\": 0" +
         "  }" +
         "}");
+  }
+
+  @Test
+  public void create_group_on_specific_organization() throws Exception {
+    OrganizationTesting.insert(db, newOrganizationDto().setKey(AN_ORGANIZATION_KEY));
+
+    loginAsAdmin();
+    newRequest()
+      .setParam("organizationKey", AN_ORGANIZATION_KEY)
+      .setParam("name", "some-product-bu")
+      .setParam("description", "Business Unit for Some Awesome Product")
+      .execute().assertJson("{" +
+      "  \"group\": {" +
+      "    \"organizationKey\": \"" + AN_ORGANIZATION_KEY + "\"," +
+      "    \"name\": \"some-product-bu\"," +
+      "    \"description\": \"Business Unit for Some Awesome Product\"," +
+      "    \"membersCount\": 0" +
+      "  }" +
+      "}");
   }
 
   @Test(expected = ForbiddenException.class)
@@ -109,27 +132,26 @@ public class CreateActionTest {
   }
 
   @Test
-  public void non_unique_name() throws Exception {
-    String groupName = "conflicting-name";
-    groupDao.insert(dbSession, new GroupDto()
-      .setName(groupName));
+  public void fail_if_name_already_exists_in_the_organization() throws Exception {
+    GroupDto group = GroupTesting.newGroupDto().setName("conflicting-name").setOrganizationUuid(defaultOrganizationProvider.get().getUuid());
+    db.getDbClient().groupDao().insert(dbSession, group);
     db.commit();
 
     expectedException.expect(ServerException.class);
-    expectedException.expectMessage("already taken");
+    expectedException.expectMessage("Group '" + group.getName() + "' already exists");
 
     loginAsAdmin();
     newRequest()
-      .setParam("name", groupName)
-      .execute().assertStatus(HttpURLConnection.HTTP_CONFLICT);
+      .setParam("name", group.getName())
+      .execute();
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void description_too_long() throws Exception {
     loginAsAdmin();
     newRequest()
-      .setParam("name", "long-group-description-is-looooooooooooong")
-      .setParam("description", StringUtils.repeat("a", 200 + 1))
+      .setParam("name", "long-desc")
+      .setParam("description", StringUtils.repeat("a", 1_000))
       .execute();
   }
 
@@ -140,4 +162,5 @@ public class CreateActionTest {
   private void loginAsAdmin() {
     userSession.login("admin").setGlobalPermissions(GlobalPermissions.SYSTEM_ADMIN);
   }
+
 }
