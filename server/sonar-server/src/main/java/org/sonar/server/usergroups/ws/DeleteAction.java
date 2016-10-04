@@ -35,20 +35,21 @@ import org.sonar.server.user.UserSession;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.PARAM_GROUP_ID;
-import static org.sonar.server.usergroups.ws.UserGroupsWsParameters.PARAM_GROUP_NAME;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_GROUP_ID;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_GROUP_NAME;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.defineWsGroupParameters;
 
 public class DeleteAction implements UserGroupsWsAction {
 
   private final DbClient dbClient;
-  private final UserGroupFinder userGroupFinder;
   private final UserSession userSession;
+  private final GroupWsSupport support;
   private final Settings settings;
 
-  public DeleteAction(DbClient dbClient, UserGroupFinder userGroupFinder, UserSession userSession, Settings settings) {
+  public DeleteAction(DbClient dbClient, UserSession userSession, GroupWsSupport support, Settings settings) {
     this.dbClient = dbClient;
-    this.userGroupFinder = userGroupFinder;
     this.userSession = userSession;
+    this.support = support;
     this.settings = settings;
   }
 
@@ -63,18 +64,16 @@ public class DeleteAction implements UserGroupsWsAction {
       .setSince("5.2")
       .setPost(true);
 
-    UserGroupsWsParameters.createGroupParameters(action);
+    defineWsGroupParameters(action);
   }
 
   @Override
   public void handle(Request request, Response response) throws Exception {
     userSession.checkLoggedIn().checkPermission(GlobalPermissions.SYSTEM_ADMIN);
 
-    WsGroupRef groupRef = WsGroupRef.newWsGroupRefFromUserGroupRequest(request);
-
     DbSession dbSession = dbClient.openSession(false);
     try {
-      GroupDto group = userGroupFinder.getGroup(dbSession, groupRef);
+      GroupDto group = support.findGroup(dbSession, request);
       long groupId = group.getId();
 
       checkNotTryingToDeleteDefaultGroup(dbSession, groupId);
