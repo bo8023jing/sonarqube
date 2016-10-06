@@ -17,18 +17,32 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package org.sonar.db.version;
+package org.sonar.db.version.v62;
 
+import java.sql.SQLException;
+import java.sql.Types;
+import org.junit.Rule;
 import org.junit.Test;
-import org.sonar.core.platform.ComponentContainer;
+import org.sonar.api.utils.System2;
+import org.sonar.db.DbTester;
 
-import static org.assertj.core.api.Assertions.assertThat;
+public class MakeOrganizationUuidNotNullOnTableGroupsTest {
+  @Rule
+  public DbTester dbTester = DbTester.createForSchema(System2.INSTANCE, MakeOrganizationUuidNotNullOnTableGroupsTest.class, "table_groups.sql");
 
-public class MigrationStepModuleTest {
+  private MakeOrganizationUuidNotNullOnTableGroups underTest = new MakeOrganizationUuidNotNullOnTableGroups(dbTester.database());
+
   @Test
-  public void verify_count_of_added_MigrationStep_types() {
-    ComponentContainer container = new ComponentContainer();
-    new MigrationStepModule().configure(container);
-    assertThat(container.size()).isEqualTo(147);
+  public void execute_makes_column_organization_uuid_not_null() throws SQLException {
+    underTest.execute();
+
+    dbTester.assertColumnDefinition("groups", "organization_uuid", Types.VARCHAR, 40, false);
+  }
+
+  @Test
+  public void migration_is_reentrant() throws SQLException {
+    underTest.execute();
+
+    underTest.execute();
   }
 }
