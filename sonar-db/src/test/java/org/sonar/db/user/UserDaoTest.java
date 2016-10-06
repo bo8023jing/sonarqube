@@ -54,20 +54,18 @@ import static org.sonar.db.user.UserTesting.newUserDto;
 
 public class UserDaoTest {
 
+  private static final long NOW = 1500000000000L;
+
+  private System2 system2 = mock(System2.class);
+
   @Rule
   public ExpectedException thrown = ExpectedException.none();
-
-  System2 system2 = mock(System2.class);
-
   @Rule
   public DbTester db = DbTester.create(system2);
 
-  static final long NOW = 1500000000000L;
-
-  DbClient dbClient = db.getDbClient();
-
-  UserDao underTest = db.getDbClient().userDao();
-  final DbSession session = db.getSession();
+  private DbClient dbClient = db.getDbClient();
+  private DbSession session = db.getSession();
+  private UserDao underTest = db.getDbClient().userDao();
 
   @Before
   public void setUp() throws Exception {
@@ -543,7 +541,7 @@ public class UserDaoTest {
   }
 
   private UserGroupDto insertUserGroup(UserDto user) {
-    GroupDto group = new GroupDto().setName(randomAlphanumeric(30));
+    GroupDto group = new GroupDto().setName(randomAlphanumeric(30)).setOrganizationUuid(db.getDefaultOrganizationUuid());
     dbClient.groupDao().insert(session, group);
 
     UserGroupDto dto = new UserGroupDto().setUserId(user.getId()).setGroupId(group.getId());

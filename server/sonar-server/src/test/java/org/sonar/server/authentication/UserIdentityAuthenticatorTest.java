@@ -53,47 +53,41 @@ import static org.mockito.Mockito.mock;
 
 public class UserIdentityAuthenticatorTest {
 
-  static String USER_LOGIN = "github-johndoo";
-
-  static String DEFAULT_GROUP = "default";
-
-  static UserIdentity USER_IDENTITY = UserIdentity.builder()
+  private static String USER_LOGIN = "github-johndoo";
+  private static String DEFAULT_GROUP = "default";
+  private static UserIdentity USER_IDENTITY = UserIdentity.builder()
     .setProviderLogin("johndoo")
     .setLogin(USER_LOGIN)
     .setName("John")
     .setEmail("john@email.com")
     .build();
-
-  static TestIdentityProvider IDENTITY_PROVIDER = new TestIdentityProvider()
+  private static TestIdentityProvider IDENTITY_PROVIDER = new TestIdentityProvider()
     .setKey("github")
     .setEnabled(true)
     .setAllowsUsersToSignUp(true);
 
+  private System2 system2 = mock(System2.class);
+
   @Rule
   public ExpectedException thrown = ExpectedException.none();
-
-  System2 system2 = mock(System2.class);
-
   @Rule
   public DbTester dbTester = DbTester.create(system2);
 
-  DbClient dbClient = dbTester.getDbClient();
-  DbSession dbSession = dbTester.getSession();
-  UserDao userDao = dbClient.userDao();
-  GroupDao groupDao = dbClient.groupDao();
-  Settings settings = new MapSettings();
+  private DbClient dbClient = dbTester.getDbClient();
+  private DbSession dbSession = dbTester.getSession();
+  private UserDao userDao = dbClient.userDao();
+  private GroupDao groupDao = dbClient.groupDao();
+  private Settings settings = new MapSettings();
 
-  HttpServletRequest request = mock(HttpServletRequest.class);
-  HttpServletResponse response = mock(HttpServletResponse.class);
-
-  UserUpdater userUpdater = new UserUpdater(
+  private HttpServletRequest request = mock(HttpServletRequest.class);
+  private HttpServletResponse response = mock(HttpServletResponse.class);
+  private UserUpdater userUpdater = new UserUpdater(
     mock(NewUserNotifier.class),
     settings,
     dbClient,
     mock(UserIndexer.class),
     system2);
-
-  UserIdentityAuthenticator underTest = new UserIdentityAuthenticator(dbClient, userUpdater);
+  private UserIdentityAuthenticator underTest = new UserIdentityAuthenticator(dbClient, userUpdater);
 
   @Before
   public void setUp() throws Exception {

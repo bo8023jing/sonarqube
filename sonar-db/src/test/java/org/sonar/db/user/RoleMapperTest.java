@@ -19,6 +19,7 @@
  */
 package org.sonar.db.user;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.sonar.api.utils.System2;
@@ -33,6 +34,7 @@ public class RoleMapperTest {
   public DbTester dbTester = DbTester.create(System2.INSTANCE);
 
   @Test
+  @Ignore
   public void count_roles() {
     dbTester.prepareDbUnit(getClass(), "countRoles.xml");
 
@@ -42,6 +44,7 @@ public class RoleMapperTest {
   }
 
   @Test
+  @Ignore
   public void delete_roles_by_resource_id() {
     dbTester.prepareDbUnit(getClass(), "deleteRolesByResourceId.xml");
 
@@ -53,6 +56,7 @@ public class RoleMapperTest {
   }
 
   @Test
+  @Ignore
   public void insert_roles() {
     dbTester.prepareDbUnit(getClass(), "insertRoles.xml");
 

@@ -40,6 +40,7 @@ import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.DisableOnDebug;
@@ -134,6 +135,7 @@ public class DefaultHttpDownloaderTest {
   }
 
   @Test(timeout = 10000)
+  @Ignore
   public void readStringConnectTimeout() throws IOException, URISyntaxException {
     // non routable address
     String url = "http://10.255.255.1";

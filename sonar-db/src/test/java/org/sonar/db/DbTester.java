@@ -69,6 +69,7 @@ import org.sonar.db.organization.OrganizationDto;
 import org.sonar.db.organization.OrganizationTesting;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.sql.ResultSetMetaData.columnNoNulls;
@@ -87,6 +88,8 @@ public class DbTester extends ExternalResource {
   private final TestDb db;
   private DbClient client;
   private DbSession session = null;
+  @CheckForNull
+  private String defaultOrganizationUuid;
   private boolean disableDefaultOrganization = false;
   private boolean started = false;
 
@@ -124,6 +127,11 @@ public class DbTester extends ExternalResource {
     return this;
   }
 
+  public String getDefaultOrganizationUuid() {
+    checkState(!disableDefaultOrganization, "There is not default organization in DbTester when support for it has been disabled");
+    return defaultOrganizationUuid;
+  }
+
   @Override
   protected void before() throws Throwable {
     db.start();
@@ -141,6 +149,7 @@ public class DbTester extends ExternalResource {
       client.organizationDao().insert(dbSession, org);
       client.internalPropertiesDao().save(dbSession, "organization.default", org.getUuid());
       dbSession.commit();
+      this.defaultOrganizationUuid = org.getUuid();
     }
   }
 
