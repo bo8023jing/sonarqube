@@ -281,7 +281,7 @@ public class TemplateUsersActionTest extends BasePermissionWsTest<TemplateUsersA
   }
 
   private UserDto insertUser(UserDto userDto) {
-    return userTester.insertUser(userDto);
+    return db.users().insertUser(userDto);
   }
 
   private PermissionTemplateDto insertTemplate(String uuid) {

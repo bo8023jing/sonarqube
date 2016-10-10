@@ -39,7 +39,6 @@ import org.sonar.db.permission.GroupPermissionDto;
 import org.sonar.db.property.PropertyDto;
 import org.sonar.db.qualitygate.ProjectQgateAssociation;
 import org.sonar.db.qualitygate.QualityGateDto;
-import org.sonar.db.user.UserDbTester;
 import org.sonar.db.user.UserDto;
 import org.sonar.server.exceptions.NotFoundException;
 import org.sonar.server.qualitygate.QgateProjectFinder.Association;
@@ -142,14 +141,12 @@ public class QgateProjectFinderTest {
 
   @Test
   public void return_only_authorized_projects() throws Exception {
-    UserDbTester userTester = new UserDbTester(dbTester);
-    UserDto user = userTester.insertUser("a_login");
+    UserDto user = dbTester.users().insertUser("a_login");
     ComponentDto project1 = componentDbTester.insertComponent(newProjectDto());
     componentDbTester.insertComponent(newProjectDto());
 
     // User can only see project 1
-    userTester.insertProjectPermissionOnUser(user, UserRole.USER, project1);
-    dbTester.commit();
+    dbTester.users().insertProjectPermissionOnUser(user, UserRole.USER, project1);
 
     userSession.login(user.getLogin()).setUserId(user.getId().intValue());
     Association result = underTest.find(

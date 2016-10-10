@@ -57,7 +57,7 @@ public class RemoveUserFromTemplateActionTest extends BasePermissionWsTest<Remov
 
   @Before
   public void setUp() {
-    user = userTester.insertUser("user-login");
+    user = db.users().insertUser("user-login");
     template = insertTemplate();
     addUserToTemplate(user, template, DEFAULT_PERMISSION);
   }
@@ -104,7 +104,7 @@ public class RemoveUserFromTemplateActionTest extends BasePermissionWsTest<Remov
 
   @Test
   public void keep_other_users_when_one_user_removed() throws Exception {
-    UserDto newUser = userTester.insertUser("new-login");
+    UserDto newUser = db.users().insertUser("new-login");
     addUserToTemplate(newUser, template, DEFAULT_PERMISSION);
 
     loginAsAdmin();

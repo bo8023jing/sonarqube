@@ -58,7 +58,7 @@ public class AddUserToTemplateActionTest extends BasePermissionWsTest<AddUserToT
   public void setUp() {
     loginAsAdmin();
 
-    user = userTester.insertUser("user-login");
+    user = db.users().insertUser("user-login");
     permissionTemplate = insertTemplate();
   }
 

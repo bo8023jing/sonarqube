@@ -29,7 +29,6 @@ import org.sonar.db.DbTester;
 import org.sonar.db.organization.OrganizationDto;
 import org.sonar.db.organization.OrganizationTesting;
 import org.sonar.db.user.GroupDto;
-import org.sonar.db.user.UserDbTester;
 import org.sonar.db.user.UserDto;
 import org.sonar.server.exceptions.UnauthorizedException;
 import org.sonar.server.organization.DefaultOrganizationProviderRule;
@@ -52,7 +51,6 @@ public class SearchActionTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  private UserDbTester userTester = new UserDbTester(db);
   private WsTester ws;
 
   @Before
@@ -158,9 +156,9 @@ public class SearchActionTest {
   @Test
   public void search_in_organization() throws Exception {
     OrganizationDto org = OrganizationTesting.insert(db, newOrganizationDto());
-    GroupDto group = userTester.insertGroup(org, "users");
+    GroupDto group = db.users().insertGroup(org, "users");
     // the group in default org is not returned
-    userTester.insertGroup(db.getDefaultOrganization(), "users");
+    db.users().insertGroup(db.getDefaultOrganization(), "users");
 
     loginAsSimpleUser();
     newRequest()
@@ -185,10 +183,10 @@ public class SearchActionTest {
 
   private void insertGroup(OrganizationDto org, String name, int numberOfMembers) {
     GroupDto group = newGroupDto().setName(name).setDescription(capitalize(name)).setOrganizationUuid(org.getUuid());
-    userTester.insertGroup(group);
+    db.users().insertGroup(group);
     for (int i = 0; i < numberOfMembers; i++) {
-      UserDto user = userTester.insertUser();
-      userTester.insertMember(group, user);
+      UserDto user = db.users().insertUser();
+      db.users().insertMember(group, user);
     }
   }
 

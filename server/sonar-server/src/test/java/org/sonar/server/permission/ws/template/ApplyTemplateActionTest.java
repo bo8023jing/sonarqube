@@ -77,10 +77,10 @@ public class ApplyTemplateActionTest extends BasePermissionWsTest<ApplyTemplateA
   public void setUp() {
     loginAsAdmin();
 
-    user1 = userTester.insertUser("user-login-1");
-    user2 = userTester.insertUser("user-login-2");
-    group1 = userTester.insertGroup(defaultOrganizationProvider.getDto(), "group-name-1");
-    group2 = userTester.insertGroup(defaultOrganizationProvider.getDto(), "group-name-2");
+    user1 = db.users().insertUser("user-login-1");
+    user2 = db.users().insertUser("user-login-2");
+    group1 = db.users().insertGroup(defaultOrganizationProvider.getDto(), "group-name-1");
+    group2 = db.users().insertGroup(defaultOrganizationProvider.getDto(), "group-name-2");
 
     // template 1
     template1 = insertTemplate();
@@ -95,11 +95,11 @@ public class ApplyTemplateActionTest extends BasePermissionWsTest<ApplyTemplateA
     addGroupToTemplate(group1, template2, UserRole.USER);
     addGroupToTemplate(group2, template2, UserRole.USER);
 
-    project = componentTester.insertComponent(newProjectDto("project-uuid-1"));
-    userTester.insertProjectPermissionOnUser(user1, UserRole.ADMIN, project);
-    userTester.insertProjectPermissionOnUser(user2, UserRole.ADMIN, project);
-    userTester.insertProjectPermissionOnGroup(group1, UserRole.ADMIN, project);
-    userTester.insertProjectPermissionOnGroup(group2, UserRole.ADMIN, project);
+    project = db.components().insertComponent(newProjectDto("project-uuid-1"));
+    db.users().insertProjectPermissionOnUser(user1, UserRole.ADMIN, project);
+    db.users().insertProjectPermissionOnUser(user2, UserRole.ADMIN, project);
+    db.users().insertProjectPermissionOnGroup(group1, UserRole.ADMIN, project);
+    db.users().insertProjectPermissionOnGroup(group2, UserRole.ADMIN, project);
   }
 
   @Test

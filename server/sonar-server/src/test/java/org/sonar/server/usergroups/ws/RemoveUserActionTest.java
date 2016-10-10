@@ -29,7 +29,6 @@ import org.sonar.db.DbTester;
 import org.sonar.db.organization.OrganizationDto;
 import org.sonar.db.organization.OrganizationTesting;
 import org.sonar.db.user.GroupDto;
-import org.sonar.db.user.UserDbTester;
 import org.sonar.db.user.UserDto;
 import org.sonar.server.exceptions.NotFoundException;
 import org.sonar.server.organization.DefaultOrganizationProviderRule;
@@ -51,7 +50,6 @@ public class RemoveUserActionTest {
   public ExpectedException expectedException = ExpectedException.none();
 
   private DefaultOrganizationProviderRule defaultOrganizationProvider = DefaultOrganizationProviderRule.create(db);
-  private UserDbTester userTester = new UserDbTester(db);
   private WsTester ws;
 
   @Before
@@ -62,8 +60,8 @@ public class RemoveUserActionTest {
 
   @Test
   public void does_nothing_if_user_is_not_in_group() throws Exception {
-    GroupDto group = userTester.insertGroup(defaultOrganizationProvider.getDto(), "admins");
-    UserDto user = userTester.insertUser("my-admin");
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "admins");
+    UserDto user = db.users().insertUser("my-admin");
 
     loginAsAdmin();
     newRequest()
@@ -72,14 +70,14 @@ public class RemoveUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(userTester.selectGroupIdsOfUser(user)).isEmpty();
+    assertThat(db.users().selectGroupIdsOfUser(user)).isEmpty();
   }
 
   @Test
   public void remove_user_by_group_id() throws Exception {
-    GroupDto users = userTester.insertGroup(defaultOrganizationProvider.getDto(), "users");
-    UserDto user = userTester.insertUser("my-admin");
-    userTester.insertMember(users, user);
+    GroupDto users = db.users().insertGroup(defaultOrganizationProvider.getDto(), "users");
+    UserDto user = db.users().insertUser("my-admin");
+    db.users().insertMember(users, user);
 
     loginAsAdmin();
     newRequest()
@@ -88,14 +86,14 @@ public class RemoveUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(userTester.selectGroupIdsOfUser(user)).isEmpty();
+    assertThat(db.users().selectGroupIdsOfUser(user)).isEmpty();
   }
 
   @Test
   public void remove_user_by_group_name_in_default_organization() throws Exception {
-    GroupDto group = userTester.insertGroup(defaultOrganizationProvider.getDto(), "group_name");
-    UserDto user = userTester.insertUser("user_login");
-    userTester.insertMember(group, user);
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "group_name");
+    UserDto user = db.users().insertUser("user_login");
+    db.users().insertMember(group, user);
 
     loginAsAdmin();
     newRequest()
@@ -104,15 +102,15 @@ public class RemoveUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(userTester.selectGroupIdsOfUser(user)).isEmpty();
+    assertThat(db.users().selectGroupIdsOfUser(user)).isEmpty();
   }
 
   @Test
   public void remove_user_by_group_name_in_specific_organization() throws Exception {
     OrganizationDto org = OrganizationTesting.insert(db, OrganizationTesting.newOrganizationDto());
-    GroupDto group = userTester.insertGroup(org, "a_group");
-    UserDto user = userTester.insertUser("user_login");
-    userTester.insertMember(group, user);
+    GroupDto group = db.users().insertGroup(org, "a_group");
+    UserDto user = db.users().insertUser("user_login");
+    db.users().insertMember(group, user);
 
     loginAsAdmin();
     newRequest()
@@ -122,16 +120,16 @@ public class RemoveUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(userTester.selectGroupIdsOfUser(user)).isEmpty();
+    assertThat(db.users().selectGroupIdsOfUser(user)).isEmpty();
   }
 
   @Test
   public void remove_user_only_from_one_group() throws Exception {
-    GroupDto users = userTester.insertGroup(defaultOrganizationProvider.getDto(), "user");
-    GroupDto admins = userTester.insertGroup(defaultOrganizationProvider.getDto(), "admins");
-    UserDto user = userTester.insertUser("user");
-    userTester.insertMember(users, user);
-    userTester.insertMember(admins, user);
+    GroupDto users = db.users().insertGroup(defaultOrganizationProvider.getDto(), "user");
+    GroupDto admins = db.users().insertGroup(defaultOrganizationProvider.getDto(), "admins");
+    UserDto user = db.users().insertUser("user");
+    db.users().insertMember(users, user);
+    db.users().insertMember(admins, user);
 
     loginAsAdmin();
     newRequest()
@@ -140,12 +138,12 @@ public class RemoveUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(userTester.selectGroupIdsOfUser(user)).containsOnly(users.getId());
+    assertThat(db.users().selectGroupIdsOfUser(user)).containsOnly(users.getId());
   }
 
   @Test
   public void fail_if_unknown_group() throws Exception {
-    UserDto user = userTester.insertUser("my-admin");
+    UserDto user = db.users().insertUser("my-admin");
 
     expectedException.expect(NotFoundException.class);
 
@@ -158,7 +156,7 @@ public class RemoveUserActionTest {
 
   @Test
   public void fail_if_unknown_user() throws Exception {
-    GroupDto group = userTester.insertGroup(defaultOrganizationProvider.getDto(), "admins");
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "admins");
 
     expectedException.expect(NotFoundException.class);
 

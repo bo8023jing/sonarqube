@@ -54,12 +54,12 @@ public class UsersActionTest extends BasePermissionWsTest<UsersAction> {
 
   @Test
   public void search_for_users_with_response_example() throws Exception {
-    UserDto user1 = userTester.insertUser(newUserDto().setLogin("admin").setName("Administrator").setEmail("admin@admin.com"));
-    UserDto user2 = userTester.insertUser(newUserDto().setLogin("george.orwell").setName("George Orwell").setEmail("george.orwell@1984.net"));
-    userTester.insertPermissionOnUser(user1, SYSTEM_ADMIN);
-    userTester.insertPermissionOnUser(user1, QUALITY_GATE_ADMIN);
-    userTester.insertPermissionOnUser(user1, QUALITY_PROFILE_ADMIN);
-    userTester.insertPermissionOnUser(user2, SCAN_EXECUTION);
+    UserDto user1 = db.users().insertUser(newUserDto().setLogin("admin").setName("Administrator").setEmail("admin@admin.com"));
+    UserDto user2 = db.users().insertUser(newUserDto().setLogin("george.orwell").setName("George Orwell").setEmail("george.orwell@1984.net"));
+    db.users().insertPermissionOnUser(user1, SYSTEM_ADMIN);
+    db.users().insertPermissionOnUser(user1, QUALITY_GATE_ADMIN);
+    db.users().insertPermissionOnUser(user1, QUALITY_PROFILE_ADMIN);
+    db.users().insertPermissionOnUser(user2, SCAN_EXECUTION);
 
     loginAsAdmin();
     String result = newRequest().execute().outputAsString();
@@ -80,17 +80,17 @@ public class UsersActionTest extends BasePermissionWsTest<UsersAction> {
   @Test
   public void search_for_users_with_permission_on_project() throws Exception {
     // User has permission on project
-    ComponentDto project = componentTester.insertComponent(newProjectDto());
-    UserDto user = userTester.insertUser(newUserDto());
-    userTester.insertProjectPermissionOnUser(user, ISSUE_ADMIN, project);
+    ComponentDto project = db.components().insertComponent(newProjectDto());
+    UserDto user = db.users().insertUser(newUserDto());
+    db.users().insertProjectPermissionOnUser(user, ISSUE_ADMIN, project);
 
     // User has permission on another project
-    ComponentDto anotherProject = componentTester.insertComponent(newProjectDto());
-    UserDto userHavePermissionOnAnotherProject = userTester.insertUser(newUserDto());
-    userTester.insertProjectPermissionOnUser(userHavePermissionOnAnotherProject, ISSUE_ADMIN, anotherProject);
+    ComponentDto anotherProject = db.components().insertComponent(newProjectDto());
+    UserDto userHavePermissionOnAnotherProject = db.users().insertUser(newUserDto());
+    db.users().insertProjectPermissionOnUser(userHavePermissionOnAnotherProject, ISSUE_ADMIN, anotherProject);
 
     // User has no permission
-    UserDto withoutPermission = userTester.insertUser(newUserDto());
+    UserDto withoutPermission = db.users().insertUser(newUserDto());
 
     userSession.login().addProjectUuidPermissions(SYSTEM_ADMIN, project.uuid());
     String result = newRequest()
@@ -107,12 +107,12 @@ public class UsersActionTest extends BasePermissionWsTest<UsersAction> {
   @Test
   public void search_only_for_users_with_permission_when_no_search_query() throws Exception {
     // User have permission on project
-    ComponentDto project = componentTester.insertComponent(newProjectDto());
-    UserDto user = userTester.insertUser(newUserDto());
-    userTester.insertProjectPermissionOnUser(user, ISSUE_ADMIN, project);
+    ComponentDto project = db.components().insertComponent(newProjectDto());
+    UserDto user = db.users().insertUser(newUserDto());
+    db.users().insertProjectPermissionOnUser(user, ISSUE_ADMIN, project);
 
     // User has no permission
-    UserDto withoutPermission = userTester.insertUser(newUserDto());
+    UserDto withoutPermission = db.users().insertUser(newUserDto());
 
     loginAsAdmin();
     String result = newRequest()
@@ -127,13 +127,13 @@ public class UsersActionTest extends BasePermissionWsTest<UsersAction> {
   @Test
   public void search_also_for_users_without_permission_when_search_query() throws Exception {
     // User with permission on project
-    ComponentDto project = componentTester.insertComponent(newProjectDto());
-    UserDto user = userTester.insertUser(newUserDto("with-permission", "with-permission", null));
-    userTester.insertProjectPermissionOnUser(user, ISSUE_ADMIN, project);
+    ComponentDto project = db.components().insertComponent(newProjectDto());
+    UserDto user = db.users().insertUser(newUserDto("with-permission", "with-permission", null));
+    db.users().insertProjectPermissionOnUser(user, ISSUE_ADMIN, project);
 
     // User without permission
-    UserDto withoutPermission = userTester.insertUser(newUserDto("without-permission", "without-permission", null));
-    UserDto anotherUser = userTester.insertUser(newUserDto("another-user", "another-user", null));
+    UserDto withoutPermission = db.users().insertUser(newUserDto("without-permission", "without-permission", null));
+    UserDto anotherUser = db.users().insertUser(newUserDto("another-user", "another-user", null));
 
     loginAsAdmin();
     String result = newRequest()
@@ -208,7 +208,7 @@ public class UsersActionTest extends BasePermissionWsTest<UsersAction> {
 
   @Test
   public void fail_if_project_uuid_and_project_key_are_provided() throws Exception {
-    componentTester.insertComponent(newProjectDto("project-uuid").setKey("project-key"));
+    db.components().insertComponent(newProjectDto("project-uuid").setKey("project-key"));
 
     expectedException.expect(BadRequestException.class);
     expectedException.expectMessage("Project id or project key can be provided, not both.");
@@ -231,12 +231,12 @@ public class UsersActionTest extends BasePermissionWsTest<UsersAction> {
   }
 
   private void insertUsersHavingGlobalPermissions() {
-    UserDto user1 = userTester.insertUser(newUserDto("login-1", "name-1", "email-1"));
-    UserDto user2 = userTester.insertUser(newUserDto("login-2", "name-2", "email-2"));
-    UserDto user3 = userTester.insertUser(newUserDto("login-3", "name-3", "email-3"));
-    userTester.insertPermissionOnUser(user1, SCAN_EXECUTION);
-    userTester.insertPermissionOnUser(user2, SCAN_EXECUTION);
-    userTester.insertPermissionOnUser(user3, SYSTEM_ADMIN);
+    UserDto user1 = db.users().insertUser(newUserDto("login-1", "name-1", "email-1"));
+    UserDto user2 = db.users().insertUser(newUserDto("login-2", "name-2", "email-2"));
+    UserDto user3 = db.users().insertUser(newUserDto("login-3", "name-3", "email-3"));
+    db.users().insertPermissionOnUser(user1, SCAN_EXECUTION);
+    db.users().insertPermissionOnUser(user2, SCAN_EXECUTION);
+    db.users().insertPermissionOnUser(user3, SYSTEM_ADMIN);
   }
 
   private WsTester.TestRequest newRequest() {

@@ -75,10 +75,10 @@ public class BulkApplyTemplateActionTest extends BasePermissionWsTest<BulkApplyT
   public void setUp() {
     loginAsAdmin();
 
-    user1 = userTester.insertUser("user-login-1");
-    user2 = userTester.insertUser("user-login-2");
-    group1 = userTester.insertGroup(defaultOrganizationProvider.getDto(), "group-name-1");
-    group2 = userTester.insertGroup(defaultOrganizationProvider.getDto(), "group-name-2");
+    user1 = db.users().insertUser("user-login-1");
+    user2 = db.users().insertUser("user-login-2");
+    group1 = db.users().insertGroup(defaultOrganizationProvider.getDto(), "group-name-1");
+    group2 = db.users().insertGroup(defaultOrganizationProvider.getDto(), "group-name-2");
 
     // template 1
     template1 = insertTemplate();
@@ -96,9 +96,9 @@ public class BulkApplyTemplateActionTest extends BasePermissionWsTest<BulkApplyT
 
   @Test
   public void bulk_apply_template_by_template_uuid() throws Exception {
-    ComponentDto project = componentTester.insertComponent(newProjectDto());
-    ComponentDto view = componentTester.insertComponent(newView());
-    ComponentDto developer = componentTester.insertComponent(newDeveloper("developer-name"));
+    ComponentDto project = db.components().insertComponent(newProjectDto());
+    ComponentDto view = db.components().insertComponent(newView());
+    ComponentDto developer = db.components().insertComponent(newDeveloper("developer-name"));
     db.users().insertProjectPermissionOnUser(user1, UserRole.ADMIN, developer);
     db.users().insertProjectPermissionOnUser(user2, UserRole.ADMIN, developer);
     db.users().insertProjectPermissionOnGroup(group1, UserRole.ADMIN, developer);
@@ -113,7 +113,7 @@ public class BulkApplyTemplateActionTest extends BasePermissionWsTest<BulkApplyT
 
   @Test
   public void bulk_apply_template_by_template_name() throws Exception {
-    ComponentDto project = componentTester.insertComponent(newProjectDto());
+    ComponentDto project = db.components().insertComponent(newProjectDto());
 
     newRequest().setParam(PARAM_TEMPLATE_NAME, template1.getName()).execute();
 
@@ -122,8 +122,8 @@ public class BulkApplyTemplateActionTest extends BasePermissionWsTest<BulkApplyT
 
   @Test
   public void apply_template_by_qualifier() throws Exception {
-    ComponentDto project = componentTester.insertComponent(newProjectDto());
-    ComponentDto view = componentTester.insertComponent(newView());
+    ComponentDto project = db.components().insertComponent(newProjectDto());
+    ComponentDto view = db.components().insertComponent(newView());
 
     newRequest()
       .setParam(PARAM_TEMPLATE_ID, template1.getUuid())
@@ -136,13 +136,13 @@ public class BulkApplyTemplateActionTest extends BasePermissionWsTest<BulkApplyT
   @Test
   public void apply_template_by_query_on_name_and_key() throws Exception {
     ComponentDto projectFoundByKey = newProjectDto().setKey("sonar");
-    componentTester.insertProjectAndSnapshot(projectFoundByKey);
+    db.components().insertProjectAndSnapshot(projectFoundByKey);
     ComponentDto projectFoundByName = newProjectDto().setName("name-sonar-name");
-    componentTester.insertProjectAndSnapshot(projectFoundByName);
+    db.components().insertProjectAndSnapshot(projectFoundByName);
     // match must be exact on key
     ComponentDto projectUntouched = newProjectDto().setKey("new-sonar").setName("project-name");
-    componentTester.insertProjectAndSnapshot(projectUntouched);
-    componentTester.indexAllComponents();
+    db.components().insertProjectAndSnapshot(projectUntouched);
+    db.components().indexAllComponents();
 
     newRequest()
       .setParam(PARAM_TEMPLATE_ID, template1.getUuid())

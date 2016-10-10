@@ -28,7 +28,6 @@ import org.sonar.api.utils.System2;
 import org.sonar.core.permission.GlobalPermissions;
 import org.sonar.db.DbTester;
 import org.sonar.db.user.GroupDto;
-import org.sonar.db.user.UserDbTester;
 import org.sonar.db.user.UserDto;
 import org.sonar.server.exceptions.ForbiddenException;
 import org.sonar.server.exceptions.NotFoundException;
@@ -48,7 +47,6 @@ public class UsersActionTest {
   @Rule
   public UserSessionRule userSession = UserSessionRule.standalone();
   private DefaultOrganizationProviderRule defaultOrganizationProvider = DefaultOrganizationProviderRule.create(db);
-  private UserDbTester userTester = new UserDbTester(db);
   private WsTester wsTester;
 
   @Before
@@ -80,7 +78,7 @@ public class UsersActionTest {
 
   @Test
   public void empty_users() throws Exception {
-    GroupDto group = userTester.insertGroup(defaultOrganizationProvider.getDto(), "a group");
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "a group");
 
     newUsersRequest()
       .setParam("login", "john")
@@ -91,10 +89,10 @@ public class UsersActionTest {
 
   @Test
   public void all_users() throws Exception {
-    GroupDto group = userTester.insertGroup(defaultOrganizationProvider.getDto(), "a group");
-    UserDto user1 = userTester.insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
-    userTester.insertMember(group, user1);
-    userTester.insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "a group");
+    UserDto user1 = db.users().insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
+    db.users().insertMember(group, user1);
+    db.users().insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
 
     newUsersRequest()
       .setParam("id", group.getId().toString())
@@ -105,11 +103,11 @@ public class UsersActionTest {
 
   @Test
   public void all_users_by_group_name() throws Exception {
-    GroupDto group = userTester.insertGroup(defaultOrganizationProvider.getDto(), "a group");
-    UserDto adaLovelace = userTester.insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
-    UserDto graceHopper = userTester.insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
-    userTester.insertMember(group, adaLovelace);
-    userTester.insertMember(group, graceHopper);
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "a group");
+    UserDto adaLovelace = db.users().insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
+    UserDto graceHopper = db.users().insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
+    db.users().insertMember(group, adaLovelace);
+    db.users().insertMember(group, graceHopper);
 
     String response = newUsersRequest()
       .setParam(PARAM_GROUP_NAME, group.getName())
@@ -120,10 +118,10 @@ public class UsersActionTest {
 
   @Test
   public void selected_users() throws Exception {
-    GroupDto group = userTester.insertGroup(defaultOrganizationProvider.getDto(), "a group");
-    UserDto user1 = userTester.insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
-    userTester.insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
-    userTester.insertMember(group, user1);
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "a group");
+    UserDto user1 = db.users().insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
+    db.users().insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
+    db.users().insertMember(group, user1);
 
     newUsersRequest()
       .setParam("id", group.getId().toString())
@@ -139,10 +137,10 @@ public class UsersActionTest {
 
   @Test
   public void deselected_users() throws Exception {
-    GroupDto group = userTester.insertGroup(defaultOrganizationProvider.getDto(), "a group");
-    UserDto user1 = userTester.insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
-    userTester.insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
-    userTester.insertMember(group, user1);
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "a group");
+    UserDto user1 = db.users().insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
+    db.users().insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
+    db.users().insertMember(group, user1);
 
     newUsersRequest()
       .setParam("id", group.getId().toString())
@@ -153,10 +151,10 @@ public class UsersActionTest {
 
   @Test
   public void paging() throws Exception {
-    GroupDto group = userTester.insertGroup(defaultOrganizationProvider.getDto(), "a group");
-    UserDto user1 = userTester.insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
-    userTester.insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
-    userTester.insertMember(group, user1);
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "a group");
+    UserDto user1 = db.users().insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
+    db.users().insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
+    db.users().insertMember(group, user1);
 
     newUsersRequest()
       .setParam("id", group.getId().toString())
@@ -176,10 +174,10 @@ public class UsersActionTest {
 
   @Test
   public void filtering() throws Exception {
-    GroupDto group = userTester.insertGroup(defaultOrganizationProvider.getDto(), "a group");
-    UserDto user1 = userTester.insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
-    userTester.insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
-    userTester.insertMember(group, user1);
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "a group");
+    UserDto user1 = db.users().insertUser(newUserDto().setLogin("ada").setName("Ada Lovelace"));
+    db.users().insertUser(newUserDto().setLogin("grace").setName("Grace Hopper"));
+    db.users().insertMember(group, user1);
 
     newUsersRequest()
       .setParam("id", group.getId().toString())

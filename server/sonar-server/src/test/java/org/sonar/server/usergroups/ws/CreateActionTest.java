@@ -30,7 +30,6 @@ import org.sonar.db.DbTester;
 import org.sonar.db.organization.OrganizationDto;
 import org.sonar.db.organization.OrganizationTesting;
 import org.sonar.db.user.GroupDto;
-import org.sonar.db.user.UserDbTester;
 import org.sonar.server.exceptions.ForbiddenException;
 import org.sonar.server.exceptions.ServerException;
 import org.sonar.server.organization.DefaultOrganization;
@@ -50,7 +49,6 @@ public class CreateActionTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  private UserDbTester tester = new UserDbTester(db);
   private DefaultOrganizationProviderRule defaultOrganizationProvider = DefaultOrganizationProviderRule.create(db);
   private WsTester ws;
 
@@ -76,7 +74,7 @@ public class CreateActionTest {
         "  }" +
         "}");
 
-    assertThat(tester.selectGroup(defaultOrganizationProvider.getDto(), "some-product-bu")).isPresent();
+    assertThat(db.users().selectGroup(defaultOrganizationProvider.getDto(), "some-product-bu")).isPresent();
   }
 
   @Test
@@ -98,7 +96,7 @@ public class CreateActionTest {
         "  }" +
         "}");
 
-    GroupDto createdGroup = tester.selectGroup(org, "some-product-bu").get();
+    GroupDto createdGroup = db.users().selectGroup(org, "some-product-bu").get();
     assertThat(createdGroup.getId()).isNotNull();
     assertThat(createdGroup.getOrganizationUuid()).isEqualTo(org.getUuid());
   }
@@ -139,7 +137,7 @@ public class CreateActionTest {
 
   @Test
   public void fail_if_group_with_same_name_already_exists() throws Exception {
-    GroupDto group = tester.insertGroup(defaultOrganizationProvider.getDto(), "the-group");
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "the-group");
 
     expectedException.expect(ServerException.class);
     expectedException.expectMessage("Group '" + group.getName() + "' already exists");
@@ -153,7 +151,7 @@ public class CreateActionTest {
   @Test
   public void fail_if_group_with_same_name_already_exists_in_the_organization() throws Exception {
     OrganizationDto org = OrganizationTesting.insert(db, newOrganizationDto());
-    GroupDto group = tester.insertGroup(org, "the-group");
+    GroupDto group = db.users().insertGroup(org, "the-group");
 
     expectedException.expect(ServerException.class);
     expectedException.expectMessage("Group '" + group.getName() + "' already exists");
@@ -170,7 +168,7 @@ public class CreateActionTest {
     String name = "the-group";
     OrganizationDto org1 = OrganizationTesting.insert(db, newOrganizationDto());
     OrganizationDto org2 = OrganizationTesting.insert(db, newOrganizationDto());
-    GroupDto group = tester.insertGroup(org1, name);
+    GroupDto group = db.users().insertGroup(org1, name);
 
     loginAsAdmin();
     newRequest()
@@ -184,8 +182,8 @@ public class CreateActionTest {
         "  }" +
         "}");
 
-    assertThat(tester.selectGroups(org1)).extracting(GroupDto::getName).containsOnly(name);
-    assertThat(tester.selectGroups(org2)).extracting(GroupDto::getName).containsOnly(name);
+    assertThat(db.users().selectGroups(org1)).extracting(GroupDto::getName).containsOnly(name);
+    assertThat(db.users().selectGroups(org2)).extracting(GroupDto::getName).containsOnly(name);
   }
 
   @Test(expected = IllegalArgumentException.class)

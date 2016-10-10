@@ -34,16 +34,15 @@ import org.sonar.db.DbTester;
 import org.sonar.db.component.ComponentDto;
 import org.sonar.db.permission.template.PermissionTemplateDbTester;
 import org.sonar.db.permission.template.PermissionTemplateDto;
-import org.sonar.db.user.GroupDbTester;
 import org.sonar.db.user.GroupDto;
 import org.sonar.db.user.RoleDao;
-import org.sonar.db.user.UserDbTester;
 import org.sonar.db.user.UserDto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.sonar.core.permission.GlobalPermissions.SCAN_EXECUTION;
+import static org.sonar.db.user.GroupTesting.newGroupDto;
 
 public class PermissionRepositoryTest {
 
@@ -59,13 +58,10 @@ public class PermissionRepositoryTest {
   @Rule
   public DbTester dbTester = DbTester.create(system2);
 
-  GroupDbTester groupDb = new GroupDbTester(dbTester);
-  UserDbTester userDb = new UserDbTester(dbTester);
-  PermissionTemplateDbTester templateDb = new PermissionTemplateDbTester(dbTester);
-  DbSession session = dbTester.getSession();
-
-  Settings settings = new MapSettings();
-  PermissionRepository underTest = new PermissionRepository(dbTester.getDbClient(), settings);
+  private PermissionTemplateDbTester templateDb = new PermissionTemplateDbTester(dbTester);
+  private DbSession session = dbTester.getSession();
+  private Settings settings = new MapSettings();
+  private PermissionRepository underTest = new PermissionRepository(dbTester.getDbClient(), settings);
 
   @Before
   public void setUp() {
@@ -128,9 +124,9 @@ public class PermissionRepositoryTest {
 
   @Test
   public void would_user_have_permission_with_default_permission_template() {
-    UserDto user = userDb.insertUser();
-    GroupDto group = groupDb.insertGroup();
-    groupDb.addUserToGroup(user.getId(), group.getId());
+    UserDto user = dbTester.users().insertUser();
+    GroupDto group = dbTester.users().insertGroup(newGroupDto());
+    dbTester.users().insertMember(group, user);
     PermissionTemplateDto template = templateDb.insertTemplate();
     setDefaultTemplateUuid(template.getUuid());
     templateDb.addProjectCreatorToTemplate(template.getId(), SCAN_EXECUTION);

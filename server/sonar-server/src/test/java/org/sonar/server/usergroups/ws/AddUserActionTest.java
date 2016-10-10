@@ -29,7 +29,6 @@ import org.sonar.db.DbTester;
 import org.sonar.db.organization.OrganizationDto;
 import org.sonar.db.organization.OrganizationTesting;
 import org.sonar.db.user.GroupDto;
-import org.sonar.db.user.UserDbTester;
 import org.sonar.db.user.UserDto;
 import org.sonar.server.exceptions.NotFoundException;
 import org.sonar.server.exceptions.UnauthorizedException;
@@ -53,7 +52,6 @@ public class AddUserActionTest {
   public ExpectedException expectedException = ExpectedException.none();
 
   private DefaultOrganizationProviderRule defaultOrganizationProvider = DefaultOrganizationProviderRule.create(db);
-  private UserDbTester tester = new UserDbTester(db);
   private WsTester ws;
 
   @Before
@@ -63,8 +61,8 @@ public class AddUserActionTest {
 
   @Test
   public void add_user_to_group_referenced_by_its_id() throws Exception {
-    GroupDto group = tester.insertGroup(defaultOrganizationProvider.getDto(), "admins");
-    UserDto user = tester.insertUser("my-admin");
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "admins");
+    UserDto user = db.users().insertUser("my-admin");
 
     loginAsAdmin();
     newRequest()
@@ -73,13 +71,13 @@ public class AddUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(tester.selectGroupIdsOfUser(user)).containsOnly(group.getId());
+    assertThat(db.users().selectGroupIdsOfUser(user)).containsOnly(group.getId());
   }
 
   @Test
   public void add_user_to_group_referenced_by_its_name() throws Exception {
-    GroupDto group = tester.insertGroup(defaultOrganizationProvider.getDto(), "a-group");
-    UserDto user = tester.insertUser("user_login");
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "a-group");
+    UserDto user = db.users().insertUser("user_login");
 
     loginAsAdmin();
     newRequest()
@@ -88,14 +86,14 @@ public class AddUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(tester.selectGroupIdsOfUser(user)).containsOnly(group.getId());
+    assertThat(db.users().selectGroupIdsOfUser(user)).containsOnly(group.getId());
   }
 
   @Test
   public void add_user_to_group_referenced_by_its_name_and_organization() throws Exception {
     OrganizationDto org = OrganizationTesting.insert(db, newOrganizationDto());
-    GroupDto group = tester.insertGroup(org, "a-group");
-    UserDto user = tester.insertUser("user_login");
+    GroupDto group = db.users().insertGroup(org, "a-group");
+    UserDto user = db.users().insertUser("user_login");
 
     loginAsAdmin();
     newRequest()
@@ -105,15 +103,15 @@ public class AddUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(tester.selectGroupIdsOfUser(user)).containsOnly(group.getId());
+    assertThat(db.users().selectGroupIdsOfUser(user)).containsOnly(group.getId());
   }
 
   @Test
   public void add_user_to_another_group() throws Exception {
-    GroupDto admins = tester.insertGroup(defaultOrganizationProvider.getDto(), "admins");
-    GroupDto users = tester.insertGroup(defaultOrganizationProvider.getDto(), "users");
-    UserDto user = tester.insertUser("my-admin");
-    tester.insertMember(users, user);
+    GroupDto admins = db.users().insertGroup(defaultOrganizationProvider.getDto(), "admins");
+    GroupDto users = db.users().insertGroup(defaultOrganizationProvider.getDto(), "users");
+    UserDto user = db.users().insertUser("my-admin");
+    db.users().insertMember(users, user);
 
     loginAsAdmin();
     newRequest()
@@ -122,14 +120,14 @@ public class AddUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(tester.selectGroupIdsOfUser(user)).containsOnly(admins.getId(), users.getId());
+    assertThat(db.users().selectGroupIdsOfUser(user)).containsOnly(admins.getId(), users.getId());
   }
 
   @Test
   public void user_is_already_member_of_group() throws Exception {
-    GroupDto users = tester.insertGroup(defaultOrganizationProvider.getDto(), "users");
-    UserDto user = tester.insertUser("my-admin");
-    tester.insertMember(users, user);
+    GroupDto users = db.users().insertGroup(defaultOrganizationProvider.getDto(), "users");
+    UserDto user = db.users().insertUser("my-admin");
+    db.users().insertMember(users, user);
 
     loginAsAdmin();
     newRequest()
@@ -139,15 +137,15 @@ public class AddUserActionTest {
       .assertNoContent();
 
     // do not insert duplicated row
-    assertThat(tester.selectGroupIdsOfUser(user)).hasSize(1).containsOnly(users.getId());
+    assertThat(db.users().selectGroupIdsOfUser(user)).hasSize(1).containsOnly(users.getId());
   }
 
   @Test
   public void group_has_multiple_members() throws Exception {
-    GroupDto users = tester.insertGroup(defaultOrganizationProvider.getDto(), "user");
-    UserDto user1 = tester.insertUser("user1");
-    UserDto user2 = tester.insertUser("user2");
-    tester.insertMember(users, user1);
+    GroupDto users = db.users().insertGroup(defaultOrganizationProvider.getDto(), "user");
+    UserDto user1 = db.users().insertUser("user1");
+    UserDto user2 = db.users().insertUser("user2");
+    db.users().insertMember(users, user1);
 
     loginAsAdmin();
     newRequest()
@@ -156,13 +154,13 @@ public class AddUserActionTest {
       .execute()
       .assertNoContent();
 
-    assertThat(tester.selectGroupIdsOfUser(user1)).containsOnly(users.getId());
-    assertThat(tester.selectGroupIdsOfUser(user2)).containsOnly(users.getId());
+    assertThat(db.users().selectGroupIdsOfUser(user1)).containsOnly(users.getId());
+    assertThat(db.users().selectGroupIdsOfUser(user2)).containsOnly(users.getId());
   }
 
   @Test
   public void fail_if_group_does_not_exist() throws Exception {
-    UserDto user = tester.insertUser("my-admin");
+    UserDto user = db.users().insertUser("my-admin");
 
     expectedException.expect(NotFoundException.class);
 
@@ -175,7 +173,7 @@ public class AddUserActionTest {
 
   @Test
   public void fail_if_user_does_not_exist() throws Exception {
-    GroupDto group = tester.insertGroup(defaultOrganizationProvider.getDto(), "admins");
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "admins");
 
     expectedException.expect(NotFoundException.class);
 
@@ -188,8 +186,8 @@ public class AddUserActionTest {
 
   @Test
   public void fail_if_not_administrator() throws Exception {
-    GroupDto group = tester.insertGroup(defaultOrganizationProvider.getDto(), "admins");
-    UserDto user = tester.insertUser("my-admin");
+    GroupDto group = db.users().insertGroup(defaultOrganizationProvider.getDto(), "admins");
+    UserDto user = db.users().insertUser("my-admin");
 
     expectedException.expect(UnauthorizedException.class);
 

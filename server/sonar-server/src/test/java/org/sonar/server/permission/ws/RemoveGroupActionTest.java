@@ -53,7 +53,7 @@ public class RemoveGroupActionTest extends BasePermissionWsTest<RemoveGroupActio
 
   @Before
   public void setUp() {
-    aGroup = userTester.insertGroup(defaultOrganizationProvider.getDto(), "sonar-administrators");
+    aGroup = db.users().insertGroup(defaultOrganizationProvider.getDto(), "sonar-administrators");
   }
 
   @Override
@@ -63,8 +63,8 @@ public class RemoveGroupActionTest extends BasePermissionWsTest<RemoveGroupActio
 
   @Test
   public void remove_permission_using_group_name() throws Exception {
-    userTester.insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
-    userTester.insertPermissionOnGroup(aGroup, PROVISIONING);
+    db.users().insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
+    db.users().insertPermissionOnGroup(aGroup, PROVISIONING);
 
     loginAsAdmin();
     newRequest()
@@ -72,13 +72,13 @@ public class RemoveGroupActionTest extends BasePermissionWsTest<RemoveGroupActio
       .setParam(PARAM_PERMISSION, PROVISIONING)
       .execute();
 
-    assertThat(userTester.selectGroupPermissions(aGroup, null)).containsOnly(SYSTEM_ADMIN);
+    assertThat(db.users().selectGroupPermissions(aGroup, null)).containsOnly(SYSTEM_ADMIN);
   }
 
   @Test
   public void remove_permission_using_group_id() throws Exception {
-    userTester.insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
-    userTester.insertPermissionOnGroup(aGroup, PROVISIONING);
+    db.users().insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
+    db.users().insertPermissionOnGroup(aGroup, PROVISIONING);
 
     loginAsAdmin();
     newRequest()
@@ -86,15 +86,15 @@ public class RemoveGroupActionTest extends BasePermissionWsTest<RemoveGroupActio
       .setParam(PARAM_PERMISSION, PROVISIONING)
       .execute();
 
-    assertThat(userTester.selectGroupPermissions(aGroup, null)).containsOnly(SYSTEM_ADMIN);
+    assertThat(db.users().selectGroupPermissions(aGroup, null)).containsOnly(SYSTEM_ADMIN);
   }
 
   @Test
   public void remove_project_permission() throws Exception {
-    ComponentDto project = componentTester.insertComponent(newProjectDto(A_PROJECT_UUID).setKey(A_PROJECT_KEY));
-    userTester.insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
-    userTester.insertProjectPermissionOnGroup(aGroup, ADMIN, project);
-    userTester.insertProjectPermissionOnGroup(aGroup, ISSUE_ADMIN, project);
+    ComponentDto project = db.components().insertComponent(newProjectDto(A_PROJECT_UUID).setKey(A_PROJECT_KEY));
+    db.users().insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
+    db.users().insertProjectPermissionOnGroup(aGroup, ADMIN, project);
+    db.users().insertProjectPermissionOnGroup(aGroup, ISSUE_ADMIN, project);
 
     loginAsAdmin();
     newRequest()
@@ -103,16 +103,16 @@ public class RemoveGroupActionTest extends BasePermissionWsTest<RemoveGroupActio
       .setParam(PARAM_PERMISSION, ADMIN)
       .execute();
 
-    assertThat(userTester.selectGroupPermissions(aGroup, null)).containsOnly(SYSTEM_ADMIN);
-    assertThat(userTester.selectGroupPermissions(aGroup, project)).containsOnly(ISSUE_ADMIN);
+    assertThat(db.users().selectGroupPermissions(aGroup, null)).containsOnly(SYSTEM_ADMIN);
+    assertThat(db.users().selectGroupPermissions(aGroup, project)).containsOnly(ISSUE_ADMIN);
   }
 
   @Test
   public void remove_with_view_uuid() throws Exception {
-    ComponentDto view = componentTester.insertComponent(newView("view-uuid").setKey("view-key"));
-    userTester.insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
-    userTester.insertProjectPermissionOnGroup(aGroup, ADMIN, view);
-    userTester.insertProjectPermissionOnGroup(aGroup, ISSUE_ADMIN, view);
+    ComponentDto view = db.components().insertComponent(newView("view-uuid").setKey("view-key"));
+    db.users().insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
+    db.users().insertProjectPermissionOnGroup(aGroup, ADMIN, view);
+    db.users().insertProjectPermissionOnGroup(aGroup, ISSUE_ADMIN, view);
 
     loginAsAdmin();
     newRequest()
@@ -121,16 +121,16 @@ public class RemoveGroupActionTest extends BasePermissionWsTest<RemoveGroupActio
       .setParam(PARAM_PERMISSION, ADMIN)
       .execute();
 
-    assertThat(userTester.selectGroupPermissions(aGroup, null)).containsOnly(SYSTEM_ADMIN);
-    assertThat(userTester.selectGroupPermissions(aGroup, view)).containsOnly(ISSUE_ADMIN);
+    assertThat(db.users().selectGroupPermissions(aGroup, null)).containsOnly(SYSTEM_ADMIN);
+    assertThat(db.users().selectGroupPermissions(aGroup, view)).containsOnly(ISSUE_ADMIN);
   }
 
   @Test
   public void remove_with_project_key() throws Exception {
-    ComponentDto project = componentTester.insertComponent(newProjectDto(A_PROJECT_UUID).setKey(A_PROJECT_KEY));
-    userTester.insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
-    userTester.insertProjectPermissionOnGroup(aGroup, ADMIN, project);
-    userTester.insertProjectPermissionOnGroup(aGroup, ISSUE_ADMIN, project);
+    ComponentDto project = db.components().insertComponent(newProjectDto(A_PROJECT_UUID).setKey(A_PROJECT_KEY));
+    db.users().insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
+    db.users().insertProjectPermissionOnGroup(aGroup, ADMIN, project);
+    db.users().insertProjectPermissionOnGroup(aGroup, ISSUE_ADMIN, project);
 
     loginAsAdmin();
     newRequest()
@@ -139,14 +139,14 @@ public class RemoveGroupActionTest extends BasePermissionWsTest<RemoveGroupActio
       .setParam(PARAM_PERMISSION, ADMIN)
       .execute();
 
-    assertThat(userTester.selectGroupPermissions(aGroup, null)).containsOnly(SYSTEM_ADMIN);
-    assertThat(userTester.selectGroupPermissions(aGroup, project)).containsOnly(ISSUE_ADMIN);
+    assertThat(db.users().selectGroupPermissions(aGroup, null)).containsOnly(SYSTEM_ADMIN);
+    assertThat(db.users().selectGroupPermissions(aGroup, project)).containsOnly(ISSUE_ADMIN);
   }
 
   @Test
   public void fail_to_remove_last_sysadmin_permission() throws Exception {
-    userTester.insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
-    userTester.insertPermissionOnGroup(aGroup, PROVISIONING);
+    db.users().insertPermissionOnGroup(aGroup, SYSTEM_ADMIN);
+    db.users().insertPermissionOnGroup(aGroup, PROVISIONING);
 
     expectedException.expect(BadRequestException.class);
     expectedException.expectMessage("Last group with 'admin' permission. Permission cannot be removed.");
@@ -181,7 +181,7 @@ public class RemoveGroupActionTest extends BasePermissionWsTest<RemoveGroupActio
 
   @Test
   public void fail_when_component_is_not_a_project() throws Exception {
-    ComponentDto file = componentTester.insertComponent(newFileDto(newProjectDto(A_PROJECT_UUID), null, "file-uuid"));
+    ComponentDto file = db.components().insertComponent(newFileDto(newProjectDto(A_PROJECT_UUID), null, "file-uuid"));
 
     expectedException.expect(BadRequestException.class);
 
@@ -233,7 +233,7 @@ public class RemoveGroupActionTest extends BasePermissionWsTest<RemoveGroupActio
 
   @Test
   public void fail_when_project_uuid_and_project_key_are_provided() throws Exception {
-    ComponentDto project = componentTester.insertComponent(newProjectDto(A_PROJECT_UUID).setKey(A_PROJECT_KEY));
+    ComponentDto project = db.components().insertComponent(newProjectDto(A_PROJECT_UUID).setKey(A_PROJECT_KEY));
 
     expectedException.expect(BadRequestException.class);
     expectedException.expectMessage("Project id or project key can be provided, not both.");

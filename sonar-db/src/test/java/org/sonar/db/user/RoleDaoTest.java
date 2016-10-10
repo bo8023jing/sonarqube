@@ -41,7 +41,6 @@ public class RoleDaoTest {
   @Rule
   public DbTester db = DbTester.create(System2.INSTANCE);
 
-  private UserDbTester userTester = new UserDbTester(db);
   private DbSession dbSession = db.getSession();
   private RoleDao underTest = db.getDbClient().roleDao();
 
@@ -52,8 +51,8 @@ public class RoleDaoTest {
 
   @Before
   public void setUp() throws Exception {
-    user1 = userTester.insertUser();
-    user2 = userTester.insertUser();
+    user1 = db.users().insertUser();
+    user2 = db.users().insertUser();
     ComponentDbTester componentDbTester = new ComponentDbTester(db);
     project1 = componentDbTester.insertProject();
     project2 = componentDbTester.insertProject();
@@ -61,14 +60,14 @@ public class RoleDaoTest {
 
   @Test
   public void selectComponentIdsByPermissionAndUserId() {
-    userTester.insertProjectPermissionOnUser(user1, UserRole.ADMIN, project1);
-    userTester.insertProjectPermissionOnUser(user1, UserRole.ADMIN, project2);
+    db.users().insertProjectPermissionOnUser(user1, UserRole.ADMIN, project1);
+    db.users().insertProjectPermissionOnUser(user1, UserRole.ADMIN, project2);
     // global permission - not returned
-    userTester.insertPermissionOnUser(user1, UserRole.ADMIN);
+    db.users().insertPermissionOnUser(user1, UserRole.ADMIN);
     // project permission on another user id - not returned
-    userTester.insertProjectPermissionOnUser(user2, UserRole.ADMIN, project1);
+    db.users().insertProjectPermissionOnUser(user2, UserRole.ADMIN, project1);
     // project permission on another permission - not returned
-    userTester.insertProjectPermissionOnUser(user1, UserRole.ISSUE_ADMIN, project1);
+    db.users().insertProjectPermissionOnUser(user1, UserRole.ISSUE_ADMIN, project1);
 
     List<Long> projectIds = underTest.selectComponentIdsByPermissionAndUserId(dbSession, UserRole.ADMIN, user1.getId());
 
@@ -77,19 +76,19 @@ public class RoleDaoTest {
 
   @Test
   public void selectComponentIdsByPermissionAndUserId_group_permissions() {
-    GroupDto group1 = userTester.insertGroup(newGroupDto());
-    GroupDto group2 = userTester.insertGroup(newGroupDto());
-    userTester.insertProjectPermissionOnGroup(group1, UserRole.ADMIN, project1);
-    userTester.insertMember(group1, user1);
-    userTester.insertProjectPermissionOnUser(user1, UserRole.ADMIN, project2);
+    GroupDto group1 = db.users().insertGroup(newGroupDto());
+    GroupDto group2 = db.users().insertGroup(newGroupDto());
+    db.users().insertProjectPermissionOnGroup(group1, UserRole.ADMIN, project1);
+    db.users().insertMember(group1, user1);
+    db.users().insertProjectPermissionOnUser(user1, UserRole.ADMIN, project2);
     // global permission - not returned
-    userTester.insertPermissionOnUser(user1, GlobalPermissions.SYSTEM_ADMIN);
-    userTester.insertPermissionOnGroup(group1, GlobalPermissions.SYSTEM_ADMIN);
+    db.users().insertPermissionOnUser(user1, GlobalPermissions.SYSTEM_ADMIN);
+    db.users().insertPermissionOnGroup(group1, GlobalPermissions.SYSTEM_ADMIN);
     // project permission on another user id - not returned
-    userTester.insertPermissionOnGroup(group2, GlobalPermissions.SYSTEM_ADMIN);
-    userTester.insertMember(group2, user2);
+    db.users().insertPermissionOnGroup(group2, GlobalPermissions.SYSTEM_ADMIN);
+    db.users().insertMember(group2, user2);
     // project permission on another permission - not returned
-    userTester.insertProjectPermissionOnGroup(group1, UserRole.ISSUE_ADMIN, project1);
+    db.users().insertProjectPermissionOnGroup(group1, UserRole.ISSUE_ADMIN, project1);
 
     List<Long> result = underTest.selectComponentIdsByPermissionAndUserId(dbSession, UserRole.ADMIN, user1.getId());
 
@@ -176,9 +175,9 @@ public class RoleDaoTest {
 
   @Test
   public void countUserPermissions() {
-    userTester.insertProjectPermissionOnUser(user1, GlobalPermissions.SYSTEM_ADMIN, project1);
-    userTester.insertPermissionOnUser(user1, GlobalPermissions.SYSTEM_ADMIN);
-    userTester.insertPermissionOnUser(user1, GlobalPermissions.SCAN_EXECUTION);
+    db.users().insertProjectPermissionOnUser(user1, GlobalPermissions.SYSTEM_ADMIN, project1);
+    db.users().insertPermissionOnUser(user1, GlobalPermissions.SYSTEM_ADMIN);
+    db.users().insertPermissionOnUser(user1, GlobalPermissions.SCAN_EXECUTION);
 
     int result = underTest.countUserPermissions(db.getSession(), GlobalPermissions.SYSTEM_ADMIN, null);
 
@@ -187,9 +186,9 @@ public class RoleDaoTest {
 
   @Test
   public void countUserPermissions_counts_users_with_one_permission_when_the_last_one_is_in_a_group() {
-    GroupDto group1 = userTester.insertGroup(newGroupDto());
-    userTester.insertMember(group1, user1);
-    userTester.insertPermissionOnGroup(group1, GlobalPermissions.SYSTEM_ADMIN);
+    GroupDto group1 = db.users().insertGroup(newGroupDto());
+    db.users().insertMember(group1, user1);
+    db.users().insertPermissionOnGroup(group1, GlobalPermissions.SYSTEM_ADMIN);
 
     int resultWithoutExcludingGroup = underTest.countUserPermissions(db.getSession(), GlobalPermissions.SYSTEM_ADMIN, null);
     assertThat(resultWithoutExcludingGroup).isEqualTo(1);
@@ -200,10 +199,10 @@ public class RoleDaoTest {
 
   @Test
   public void countUserPermissions_counts_user_twice_when_both_user_and_group_permission() {
-    GroupDto group1 = userTester.insertGroup(newGroupDto());
-    userTester.insertMember(group1, user1);
-    userTester.insertPermissionOnGroup(group1, GlobalPermissions.SYSTEM_ADMIN);
-    userTester.insertPermissionOnUser(user1, GlobalPermissions.SYSTEM_ADMIN);
+    GroupDto group1 = db.users().insertGroup(newGroupDto());
+    db.users().insertMember(group1, user1);
+    db.users().insertPermissionOnGroup(group1, GlobalPermissions.SYSTEM_ADMIN);
+    db.users().insertPermissionOnUser(user1, GlobalPermissions.SYSTEM_ADMIN);
 
     int result = underTest.countUserPermissions(db.getSession(), GlobalPermissions.SYSTEM_ADMIN, null);
 

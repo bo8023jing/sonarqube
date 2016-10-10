@@ -71,9 +71,9 @@ public class SearchProjectPermissionsActionTest extends BasePermissionWsTest<Sea
 
   @Test
   public void search_project_permissions() throws Exception {
-    UserDto user1 = userTester.insertUser();
-    UserDto user2 = userTester.insertUser();
-    UserDto user3 = userTester.insertUser();
+    UserDto user1 = db.users().insertUser();
+    UserDto user2 = db.users().insertUser();
+    UserDto user3 = db.users().insertUser();
 
     ComponentDto jdk7 = insertJdk7();
     ComponentDto project2 = insertClang();
@@ -81,26 +81,26 @@ public class SearchProjectPermissionsActionTest extends BasePermissionWsTest<Sea
     ComponentDto view = insertView();
     insertProjectInView(jdk7, view);
 
-    userTester.insertProjectPermissionOnUser(user1, UserRole.ISSUE_ADMIN, jdk7);
-    userTester.insertProjectPermissionOnUser(user1, UserRole.ADMIN, jdk7);
-    userTester.insertProjectPermissionOnUser(user2, UserRole.ADMIN, jdk7);
-    userTester.insertProjectPermissionOnUser(user3, UserRole.ADMIN, jdk7);
-    userTester.insertProjectPermissionOnUser(user1, UserRole.ISSUE_ADMIN, project2);
-    userTester.insertProjectPermissionOnUser(user1, UserRole.ISSUE_ADMIN, dev);
-    userTester.insertProjectPermissionOnUser(user1, UserRole.ISSUE_ADMIN, view);
+    db.users().insertProjectPermissionOnUser(user1, UserRole.ISSUE_ADMIN, jdk7);
+    db.users().insertProjectPermissionOnUser(user1, UserRole.ADMIN, jdk7);
+    db.users().insertProjectPermissionOnUser(user2, UserRole.ADMIN, jdk7);
+    db.users().insertProjectPermissionOnUser(user3, UserRole.ADMIN, jdk7);
+    db.users().insertProjectPermissionOnUser(user1, UserRole.ISSUE_ADMIN, project2);
+    db.users().insertProjectPermissionOnUser(user1, UserRole.ISSUE_ADMIN, dev);
+    db.users().insertProjectPermissionOnUser(user1, UserRole.ISSUE_ADMIN, view);
     // global permission
-    userTester.insertPermissionOnUser(user1, GlobalPermissions.SYSTEM_ADMIN);
+    db.users().insertPermissionOnUser(user1, GlobalPermissions.SYSTEM_ADMIN);
 
-    GroupDto group1 = userTester.insertGroup(newGroupDto());
-    GroupDto group2 = userTester.insertGroup(newGroupDto());
-    GroupDto group3 = userTester.insertGroup(newGroupDto());
+    GroupDto group1 = db.users().insertGroup(newGroupDto());
+    GroupDto group2 = db.users().insertGroup(newGroupDto());
+    GroupDto group3 = db.users().insertGroup(newGroupDto());
 
-    userTester.insertProjectPermissionOnAnyone(defaultOrganizationProvider.getDto(), UserRole.ADMIN, jdk7);
-    userTester.insertProjectPermissionOnGroup(group1, UserRole.ADMIN, jdk7);
-    userTester.insertProjectPermissionOnGroup(group2, UserRole.ADMIN, jdk7);
-    userTester.insertProjectPermissionOnGroup(group3, UserRole.ADMIN, jdk7);
-    userTester.insertProjectPermissionOnGroup(group2, UserRole.ADMIN, dev);
-    userTester.insertProjectPermissionOnGroup(group2, UserRole.ADMIN, view);
+    db.users().insertProjectPermissionOnAnyone(defaultOrganizationProvider.getDto(), UserRole.ADMIN, jdk7);
+    db.users().insertProjectPermissionOnGroup(group1, UserRole.ADMIN, jdk7);
+    db.users().insertProjectPermissionOnGroup(group2, UserRole.ADMIN, jdk7);
+    db.users().insertProjectPermissionOnGroup(group3, UserRole.ADMIN, jdk7);
+    db.users().insertProjectPermissionOnGroup(group2, UserRole.ADMIN, dev);
+    db.users().insertProjectPermissionOnGroup(group2, UserRole.ADMIN, view);
 
     db.commit();
 
@@ -123,7 +123,7 @@ public class SearchProjectPermissionsActionTest extends BasePermissionWsTest<Sea
   @Test
   public void search_project_permissions_with_project_permission() throws Exception {
     userSession.login().addProjectUuidPermissions(UserRole.ADMIN, "project-uuid");
-    componentTester.insertComponent(newProjectDto("project-uuid"));
+    db.components().insertComponent(newProjectDto("project-uuid"));
 
     String result = newRequest()
       .setParam(PARAM_PROJECT_ID, "project-uuid")
@@ -135,7 +135,7 @@ public class SearchProjectPermissionsActionTest extends BasePermissionWsTest<Sea
   @Test
   public void has_projects_ordered_by_name() throws Exception {
     for (int i = 9; i >= 1; i--) {
-      componentTester.insertComponent(newProjectDto()
+      db.components().insertComponent(newProjectDto()
         .setName("project-name-" + i));
     }
 
@@ -196,9 +196,9 @@ public class SearchProjectPermissionsActionTest extends BasePermissionWsTest<Sea
 
   @Test
   public void filter_by_qualifier() throws Exception {
-    componentTester.insertComponent(newView("view-uuid"));
-    componentTester.insertComponent(newDeveloper("developer-name"));
-    componentTester.insertComponent(newProjectDto("project-uuid"));
+    db.components().insertComponent(newView("view-uuid"));
+    db.components().insertComponent(newDeveloper("developer-name"));
+    db.components().insertComponent(newProjectDto("project-uuid"));
 
     byte[] wsResponse = newRequest()
       .setMediaType(MediaTypes.PROTOBUF)
@@ -240,31 +240,31 @@ public class SearchProjectPermissionsActionTest extends BasePermissionWsTest<Sea
   }
 
   private ComponentDto insertView() {
-    return componentTester.insertComponent(newView()
+    return db.components().insertComponent(newView()
       .setUuid("752d8bfd-420c-4a83-a4e5-8ab19b13c8fc")
       .setName("Java")
       .setKey("Java"));
   }
 
   private ComponentDto insertProjectInView(ComponentDto project, ComponentDto view) {
-    return componentTester.insertComponent(newProjectCopy("project-in-view-uuid", project, view));
+    return db.components().insertComponent(newProjectCopy("project-in-view-uuid", project, view));
   }
 
   private ComponentDto insertDeveloper() {
-    return componentTester.insertComponent(newDeveloper("Simon Brandhof")
+    return db.components().insertComponent(newDeveloper("Simon Brandhof")
       .setUuid("4e607bf9-7ed0-484a-946d-d58ba7dab2fb")
       .setKey("simon-brandhof"));
   }
 
   private ComponentDto insertClang() {
-    return componentTester.insertComponent(newProjectDto("project-uuid-2")
+    return db.components().insertComponent(newProjectDto("project-uuid-2")
       .setName("Clang")
       .setKey("clang")
       .setUuid("ce4c03d6-430f-40a9-b777-ad877c00aa4d"));
   }
 
   private ComponentDto insertJdk7() {
-    return componentTester.insertComponent(newProjectDto("project-uuid-1")
+    return db.components().insertComponent(newProjectDto("project-uuid-1")
       .setName("JDK 7")
       .setKey("net.java.openjdk:jdk7")
       .setUuid("0bd7b1e7-91d6-439e-a607-4a3a9aad3c6a"));

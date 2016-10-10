@@ -28,7 +28,6 @@ import org.sonar.api.utils.System2;
 import org.sonar.db.DbTester;
 import org.sonar.db.user.GroupDto;
 import org.sonar.db.user.GroupTesting;
-import org.sonar.db.user.UserDbTester;
 import org.sonar.db.user.UserDto;
 import org.sonar.db.user.UserTesting;
 import org.sonar.server.exceptions.ForbiddenException;
@@ -55,7 +54,6 @@ public class SearchGlobalPermissionsActionTest {
   public DbTester db = DbTester.create(System2.INSTANCE);
   @Rule
   public UserSessionRule userSession = UserSessionRule.standalone();
-  private UserDbTester userTester = new UserDbTester(db);
   private WsActionTester ws;
   private I18nRule i18n = new I18nRule();
 
@@ -69,19 +67,19 @@ public class SearchGlobalPermissionsActionTest {
 
   @Test
   public void search() {
-    GroupDto adminGroup = userTester.insertGroup(newGroupDto("sonar-admins", "Administrators"));
-    GroupDto userGroup = userTester.insertGroup(newGroupDto("sonar-users", "Users"));
-    userTester.insertPermissionOnAnyone(SCAN_EXECUTION);
-    userTester.insertPermissionOnGroup(userGroup, SCAN_EXECUTION);
-    userTester.insertPermissionOnGroup(userGroup, PROVISIONING);
-    userTester.insertPermissionOnGroup(adminGroup, SYSTEM_ADMIN);
-    UserDto user = userTester.insertUser(newUserDto("user", "user-name"));
-    UserDto adminUser = userTester.insertUser(newUserDto("admin", "admin-name"));
-    userTester.insertPermissionOnUser(user, PROVISIONING);
-    userTester.insertPermissionOnUser(user, QUALITY_PROFILE_ADMIN);
-    userTester.insertPermissionOnUser(adminUser, QUALITY_PROFILE_ADMIN);
-    userTester.insertPermissionOnUser(user, QUALITY_GATE_ADMIN);
-    userTester.insertPermissionOnUser(adminUser, QUALITY_GATE_ADMIN);
+    GroupDto adminGroup = db.users().insertGroup(newGroupDto("sonar-admins", "Administrators"));
+    GroupDto userGroup = db.users().insertGroup(newGroupDto("sonar-users", "Users"));
+    db.users().insertPermissionOnAnyone(SCAN_EXECUTION);
+    db.users().insertPermissionOnGroup(userGroup, SCAN_EXECUTION);
+    db.users().insertPermissionOnGroup(userGroup, PROVISIONING);
+    db.users().insertPermissionOnGroup(adminGroup, SYSTEM_ADMIN);
+    UserDto user = db.users().insertUser(newUserDto("user", "user-name"));
+    UserDto adminUser = db.users().insertUser(newUserDto("admin", "admin-name"));
+    db.users().insertPermissionOnUser(user, PROVISIONING);
+    db.users().insertPermissionOnUser(user, QUALITY_PROFILE_ADMIN);
+    db.users().insertPermissionOnUser(adminUser, QUALITY_PROFILE_ADMIN);
+    db.users().insertPermissionOnUser(user, QUALITY_GATE_ADMIN);
+    db.users().insertPermissionOnUser(adminUser, QUALITY_GATE_ADMIN);
 
     String result = ws.newRequest().execute().getInput();
 

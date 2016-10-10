@@ -31,9 +31,7 @@ import org.sonar.api.utils.System2;
 import org.sonar.core.permission.GlobalPermissions;
 import org.sonar.db.DbTester;
 import org.sonar.db.user.GroupDto;
-import org.sonar.db.user.UserDbTester;
 import org.sonar.db.user.UserDto;
-import org.sonar.db.user.UserTesting;
 import org.sonar.server.es.EsTester;
 import org.sonar.server.exceptions.ForbiddenException;
 import org.sonar.server.organization.DefaultOrganizationProvider;
@@ -50,6 +48,7 @@ import org.sonar.server.ws.WsTester;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.sonar.db.user.UserTesting.newUserDto;
 
 public class CreateActionTest {
 
@@ -57,7 +56,7 @@ public class CreateActionTest {
   private Settings settings = new MapSettings().setProperty("sonar.defaultGroup", DEFAULT_GROUP_NAME);
 
   @Rule
-  public DbTester dbTester = DbTester.create(System2.INSTANCE);
+  public DbTester db = DbTester.create(System2.INSTANCE);
 
   @Rule
   public EsTester esTester = new EsTester(new UserIndexDefinition(settings));
@@ -65,7 +64,6 @@ public class CreateActionTest {
   @Rule
   public UserSessionRule userSessionRule = UserSessionRule.standalone();
 
-  private UserDbTester userTester = new UserDbTester(dbTester);
   private WsTester tester;
   private UserIndex index;
   private UserIndexer userIndexer;
@@ -75,12 +73,12 @@ public class CreateActionTest {
   @Before
   public void setUp() {
     System2 system2 = new System2();
-    defaultGroupInDefaultOrg = userTester.insertGroup(dbTester.getDefaultOrganization(), DEFAULT_GROUP_NAME);
-    userIndexer = new UserIndexer(dbTester.getDbClient(), esTester.client());
+    defaultGroupInDefaultOrg = db.users().insertGroup(db.getDefaultOrganization(), DEFAULT_GROUP_NAME);
+    userIndexer = new UserIndexer(db.getDbClient(), esTester.client());
     index = new UserIndex(esTester.client());
-    DefaultOrganizationProvider defaultOrganizationProvider = DefaultOrganizationProviderRule.create(dbTester);
-    tester = new WsTester(new UsersWs(new CreateAction(dbTester.getDbClient(),
-      new UserUpdater(mock(NewUserNotifier.class), settings, dbTester.getDbClient(), userIndexer, system2, defaultOrganizationProvider),
+    DefaultOrganizationProvider defaultOrganizationProvider = DefaultOrganizationProviderRule.create(db);
+    tester = new WsTester(new UsersWs(new CreateAction(db.getDbClient(),
+      new UserUpdater(mock(NewUserNotifier.class), settings, db.getDbClient(), userIndexer, system2, defaultOrganizationProvider),
       i18n, userSessionRule, new UserJsonWriter(userSessionRule))));
   }
 
@@ -103,11 +101,11 @@ public class CreateActionTest {
     assertThat(user.scmAccounts()).containsOnly("jn");
 
     // exists in db
-    Optional<UserDto> dbUser = userTester.selectUserByLogin("john");
+    Optional<UserDto> dbUser = db.users().selectUserByLogin("john");
     assertThat(dbUser).isPresent();
 
     // member of default group in default organization
-    assertThat(userTester.selectGroupIdsOfUser(dbUser.get())).containsOnly(defaultGroupInDefaultOrg.getId());
+    assertThat(db.users().selectGroupIdsOfUser(dbUser.get())).containsOnly(defaultGroupInDefaultOrg.getId());
   }
 
   @Test
@@ -161,9 +159,9 @@ public class CreateActionTest {
   public void reactivate_user() throws Exception {
     userSessionRule.login("admin").setLocale(Locale.FRENCH).setGlobalPermissions(GlobalPermissions.SYSTEM_ADMIN);
 
-    userTester.insertUser(UserTesting.newUserDto("john", "John", "john@email.com"));
-    dbTester.getDbClient().userDao().deactivateUserByLogin(dbTester.getSession(), "john");
-    dbTester.commit();
+    db.users().insertUser(newUserDto("john", "John", "john@email.com"));
+    db.getDbClient().userDao().deactivateUserByLogin(db.getSession(), "john");
+    db.commit();
     userIndexer.index();
     when(i18n.message(Locale.FRENCH, "user.reactivated", "user.reactivated", "john")).thenReturn("The user 'john' has been reactivated.");
 

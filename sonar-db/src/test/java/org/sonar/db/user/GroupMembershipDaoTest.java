@@ -30,7 +30,6 @@ import org.sonar.db.DbTester;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 
-
 public class GroupMembershipDaoTest {
 
   @Rule

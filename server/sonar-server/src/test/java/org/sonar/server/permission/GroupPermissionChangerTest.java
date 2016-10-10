@@ -33,7 +33,6 @@ import org.sonar.db.component.ComponentTesting;
 import org.sonar.db.organization.OrganizationDto;
 import org.sonar.db.organization.OrganizationTesting;
 import org.sonar.db.user.GroupDto;
-import org.sonar.db.user.UserDbTester;
 import org.sonar.server.exceptions.BadRequestException;
 import org.sonar.server.exceptions.ForbiddenException;
 import org.sonar.server.tester.UserSessionRule;
@@ -53,7 +52,6 @@ public class GroupPermissionChangerTest {
 
   private UserSessionRule userSession = UserSessionRule.standalone();
   private GroupPermissionChanger underTest = new GroupPermissionChanger(db.getDbClient(), userSession);
-  private UserDbTester userTester = new UserDbTester(db);
   private OrganizationDto org;
   private GroupDto group;
   private ComponentDto project;
@@ -61,7 +59,7 @@ public class GroupPermissionChangerTest {
   @Before
   public void setUp() throws Exception {
     org = OrganizationTesting.insert(db, OrganizationTesting.newOrganizationDto());
-    group = userTester.insertGroup(org, "a-group");
+    group = db.users().insertGroup(org, "a-group");
     project = new ComponentDbTester(db).insertComponent(ComponentTesting.newProjectDto());
   }
 
@@ -72,7 +70,7 @@ public class GroupPermissionChangerTest {
     loginAsAdmin();
     apply(new GroupPermissionChange(PermissionChange.Operation.ADD, GlobalPermissions.QUALITY_GATE_ADMIN, null, groupId));
 
-    assertThat(userTester.selectGroupPermissions(group, null)).containsOnly(GlobalPermissions.QUALITY_GATE_ADMIN);
+    assertThat(db.users().selectGroupPermissions(group, null)).containsOnly(GlobalPermissions.QUALITY_GATE_ADMIN);
   }
 
   @Test
@@ -82,8 +80,8 @@ public class GroupPermissionChangerTest {
     loginAsAdmin();
     apply(new GroupPermissionChange(PermissionChange.Operation.ADD, UserRole.ISSUE_ADMIN, new ProjectId(project), groupId));
 
-    assertThat(userTester.selectGroupPermissions(group, null)).isEmpty();
-    assertThat(userTester.selectGroupPermissions(group, project)).containsOnly(UserRole.ISSUE_ADMIN);
+    assertThat(db.users().selectGroupPermissions(group, null)).isEmpty();
+    assertThat(db.users().selectGroupPermissions(group, project)).containsOnly(UserRole.ISSUE_ADMIN);
   }
 
   @Test
@@ -93,8 +91,8 @@ public class GroupPermissionChangerTest {
     loginAsAdmin();
     apply(new GroupPermissionChange(PermissionChange.Operation.ADD, GlobalPermissions.QUALITY_GATE_ADMIN, null, groupId));
 
-    assertThat(userTester.selectGroupPermissions(group, null)).isEmpty();
-    assertThat(userTester.selectAnyonePermissions(null)).containsOnly(GlobalPermissions.QUALITY_GATE_ADMIN);
+    assertThat(db.users().selectGroupPermissions(group, null)).isEmpty();
+    assertThat(db.users().selectAnyonePermissions(null)).containsOnly(GlobalPermissions.QUALITY_GATE_ADMIN);
   }
 
   @Test
@@ -104,8 +102,8 @@ public class GroupPermissionChangerTest {
     loginAsAdmin();
     apply(new GroupPermissionChange(PermissionChange.Operation.ADD, UserRole.ISSUE_ADMIN, new ProjectId(project), groupId));
 
-    assertThat(userTester.selectAnyonePermissions(null)).isEmpty();
-    assertThat(userTester.selectAnyonePermissions(project)).containsOnly(UserRole.ISSUE_ADMIN);
+    assertThat(db.users().selectAnyonePermissions(null)).isEmpty();
+    assertThat(db.users().selectAnyonePermissions(project)).containsOnly(UserRole.ISSUE_ADMIN);
   }
 
   @Test
@@ -121,12 +119,12 @@ public class GroupPermissionChangerTest {
   @Test
   public void do_nothing_when_adding_permission_that_already_exists() {
     GroupIdOrAnyone groupId = new GroupIdOrAnyone(group);
-    userTester.insertPermissionOnGroup(group, GlobalPermissions.QUALITY_GATE_ADMIN);
+    db.users().insertPermissionOnGroup(group, GlobalPermissions.QUALITY_GATE_ADMIN);
 
     loginAsAdmin();
     apply(new GroupPermissionChange(PermissionChange.Operation.ADD, GlobalPermissions.QUALITY_GATE_ADMIN, null, groupId));
 
-    assertThat(userTester.selectGroupPermissions(group, null)).containsOnly(GlobalPermissions.QUALITY_GATE_ADMIN);
+    assertThat(db.users().selectGroupPermissions(group, null)).containsOnly(GlobalPermissions.QUALITY_GATE_ADMIN);
   }
 
   @Test
@@ -154,27 +152,27 @@ public class GroupPermissionChangerTest {
   @Test
   public void remove_permission_from_group() {
     GroupIdOrAnyone groupId = new GroupIdOrAnyone(group);
-    userTester.insertPermissionOnGroup(group, GlobalPermissions.QUALITY_GATE_ADMIN);
-    userTester.insertPermissionOnGroup(group, GlobalPermissions.PROVISIONING);
+    db.users().insertPermissionOnGroup(group, GlobalPermissions.QUALITY_GATE_ADMIN);
+    db.users().insertPermissionOnGroup(group, GlobalPermissions.PROVISIONING);
 
     loginAsAdmin();
     apply(new GroupPermissionChange(PermissionChange.Operation.REMOVE, GlobalPermissions.QUALITY_GATE_ADMIN, null, groupId));
 
-    assertThat(userTester.selectGroupPermissions(group, null)).containsOnly(GlobalPermissions.PROVISIONING);
+    assertThat(db.users().selectGroupPermissions(group, null)).containsOnly(GlobalPermissions.PROVISIONING);
   }
 
   @Test
   public void remove_project_permission_from_group() {
     GroupIdOrAnyone groupId = new GroupIdOrAnyone(group);
-    userTester.insertPermissionOnGroup(group, GlobalPermissions.QUALITY_GATE_ADMIN);
-    userTester.insertProjectPermissionOnGroup(group, UserRole.ISSUE_ADMIN, project);
-    userTester.insertProjectPermissionOnGroup(group, UserRole.CODEVIEWER, project);
+    db.users().insertPermissionOnGroup(group, GlobalPermissions.QUALITY_GATE_ADMIN);
+    db.users().insertProjectPermissionOnGroup(group, UserRole.ISSUE_ADMIN, project);
+    db.users().insertProjectPermissionOnGroup(group, UserRole.CODEVIEWER, project);
 
     loginAsAdmin();
     apply(new GroupPermissionChange(PermissionChange.Operation.REMOVE, UserRole.ISSUE_ADMIN, new ProjectId(project), groupId));
 
-    assertThat(userTester.selectGroupPermissions(group, null)).containsOnly(GlobalPermissions.QUALITY_GATE_ADMIN);
-    assertThat(userTester.selectGroupPermissions(group, project)).containsOnly(UserRole.CODEVIEWER);
+    assertThat(db.users().selectGroupPermissions(group, null)).containsOnly(GlobalPermissions.QUALITY_GATE_ADMIN);
+    assertThat(db.users().selectGroupPermissions(group, project)).containsOnly(UserRole.CODEVIEWER);
   }
 
   @Test
@@ -184,8 +182,8 @@ public class GroupPermissionChangerTest {
     loginAsAdmin();
     apply(new GroupPermissionChange(PermissionChange.Operation.REMOVE, UserRole.ISSUE_ADMIN, new ProjectId(project), groupId));
 
-    assertThat(userTester.selectGroupPermissions(group, null)).isEmpty();
-    assertThat(userTester.selectGroupPermissions(group, project)).isEmpty();
+    assertThat(db.users().selectGroupPermissions(group, null)).isEmpty();
+    assertThat(db.users().selectGroupPermissions(group, project)).isEmpty();
   }
 
   @Test
@@ -201,7 +199,7 @@ public class GroupPermissionChangerTest {
   @Test
   public void fail_to_remove_sysadmin_permission_if_no_more_sysadmins() {
     GroupIdOrAnyone groupId = new GroupIdOrAnyone(group);
-    userTester.insertPermissionOnGroup(group, GlobalPermissions.SYSTEM_ADMIN);
+    db.users().insertPermissionOnGroup(group, GlobalPermissions.SYSTEM_ADMIN);
 
     expectedException.expect(BadRequestException.class);
     expectedException.expectMessage("Last group with 'admin' permission. Permission cannot be removed.");

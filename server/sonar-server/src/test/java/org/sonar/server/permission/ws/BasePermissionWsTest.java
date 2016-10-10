@@ -26,11 +26,9 @@ import org.sonar.api.resources.Qualifiers;
 import org.sonar.api.utils.System2;
 import org.sonar.db.DbClient;
 import org.sonar.db.DbTester;
-import org.sonar.db.component.ComponentDbTester;
 import org.sonar.db.component.ResourceTypesRule;
 import org.sonar.db.permission.template.PermissionTemplateDto;
 import org.sonar.db.permission.template.PermissionTemplateTesting;
-import org.sonar.db.user.UserDbTester;
 import org.sonar.server.component.ComponentFinder;
 import org.sonar.server.issue.index.IssueAuthorizationIndexer;
 import org.sonar.server.organization.DefaultOrganizationProviderRule;
@@ -53,8 +51,6 @@ public abstract class BasePermissionWsTest<A extends PermissionsWsAction> {
 
   protected DefaultOrganizationProviderRule defaultOrganizationProvider = DefaultOrganizationProviderRule.create(db);
   protected UserSessionRule userSession = UserSessionRule.standalone();
-  protected UserDbTester userTester = new UserDbTester(db);
-  protected ComponentDbTester componentTester = new ComponentDbTester(db);
   protected WsTester wsTester;
 
   @Before

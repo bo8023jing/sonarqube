@@ -49,7 +49,7 @@ public class AddUserActionTest extends BasePermissionWsTest<AddUserAction> {
 
   @Before
   public void setUp() {
-    user = userTester.insertUser("ray.bradbury");
+    user = db.users().insertUser("ray.bradbury");
   }
 
   @Override
@@ -65,12 +65,12 @@ public class AddUserActionTest extends BasePermissionWsTest<AddUserAction> {
       .setParam(PARAM_PERMISSION, SYSTEM_ADMIN)
       .execute();
 
-    assertThat(userTester.selectUserPermissions(user, null)).containsOnly(SYSTEM_ADMIN);
+    assertThat(db.users().selectUserPermissions(user, null)).containsOnly(SYSTEM_ADMIN);
   }
 
   @Test
   public void add_permission_to_project_referenced_by_its_id() throws Exception {
-    ComponentDto project = componentTester.insertComponent(newProjectDto("project-uuid").setKey("project-key"));
+    ComponentDto project = db.components().insertComponent(newProjectDto("project-uuid").setKey("project-key"));
 
     loginAsAdmin();
     wsTester.newPostRequest(CONTROLLER, ACTION)
@@ -79,13 +79,13 @@ public class AddUserActionTest extends BasePermissionWsTest<AddUserAction> {
       .setParam(PARAM_PERMISSION, SYSTEM_ADMIN)
       .execute();
 
-    assertThat(userTester.selectUserPermissions(user, null)).isEmpty();
-    assertThat(userTester.selectUserPermissions(user, project)).containsOnly(SYSTEM_ADMIN);
+    assertThat(db.users().selectUserPermissions(user, null)).isEmpty();
+    assertThat(db.users().selectUserPermissions(user, project)).containsOnly(SYSTEM_ADMIN);
   }
 
   @Test
   public void add_permission_to_project_referenced_by_its_key() throws Exception {
-    ComponentDto project = componentTester.insertComponent(newProjectDto("project-uuid").setKey("project-key"));
+    ComponentDto project = db.components().insertComponent(newProjectDto("project-uuid").setKey("project-key"));
 
     loginAsAdmin();
     wsTester.newPostRequest(CONTROLLER, ACTION)
@@ -94,13 +94,13 @@ public class AddUserActionTest extends BasePermissionWsTest<AddUserAction> {
       .setParam(PARAM_PERMISSION, SYSTEM_ADMIN)
       .execute();
 
-    assertThat(userTester.selectUserPermissions(user, null)).isEmpty();
-    assertThat(userTester.selectUserPermissions(user, project)).containsOnly(SYSTEM_ADMIN);
+    assertThat(db.users().selectUserPermissions(user, null)).isEmpty();
+    assertThat(db.users().selectUserPermissions(user, project)).containsOnly(SYSTEM_ADMIN);
   }
 
   @Test
   public void add_permission_to_view() throws Exception {
-    ComponentDto view = componentTester.insertComponent(newView("view-uuid").setKey("view-key"));
+    ComponentDto view = db.components().insertComponent(newView("view-uuid").setKey("view-key"));
 
     loginAsAdmin();
     wsTester.newPostRequest(CONTROLLER, ACTION)
@@ -109,8 +109,8 @@ public class AddUserActionTest extends BasePermissionWsTest<AddUserAction> {
       .setParam(PARAM_PERMISSION, SYSTEM_ADMIN)
       .execute();
 
-    assertThat(userTester.selectUserPermissions(user, null)).isEmpty();
-    assertThat(userTester.selectUserPermissions(user, view)).containsOnly(SYSTEM_ADMIN);
+    assertThat(db.users().selectUserPermissions(user, null)).isEmpty();
+    assertThat(db.users().selectUserPermissions(user, view)).containsOnly(SYSTEM_ADMIN);
   }
 
   @Test
@@ -138,7 +138,7 @@ public class AddUserActionTest extends BasePermissionWsTest<AddUserAction> {
 
   @Test
   public void fail_when_component_is_not_a_project() throws Exception {
-    componentTester.insertComponent(newFileDto(newProjectDto("project-uuid"), null, "file-uuid"));
+    db.components().insertComponent(newFileDto(newProjectDto("project-uuid"), null, "file-uuid"));
 
     expectedException.expect(BadRequestException.class);
 
@@ -183,7 +183,7 @@ public class AddUserActionTest extends BasePermissionWsTest<AddUserAction> {
 
   @Test
   public void fail_when_project_uuid_and_project_key_are_provided() throws Exception {
-    componentTester.insertComponent(newProjectDto(A_PROJECT_UUID).setKey(A_PROJECT_KEY));
+    db.components().insertComponent(newProjectDto(A_PROJECT_UUID).setKey(A_PROJECT_KEY));
 
     expectedException.expect(BadRequestException.class);
     expectedException.expectMessage("Project id or project key can be provided, not both.");
