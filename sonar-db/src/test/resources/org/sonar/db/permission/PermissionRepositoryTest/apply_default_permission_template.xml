@@ -53,7 +53,8 @@
   <!-- default permission template for all qualifiers -->
   <permission_templates id="1"
                         name="default"
-                        kee="default_20130101_010203"/>
+                        kee="default_20130101_010203"
+                        organization_uuid="org1"/>
 
   <perm_templates_groups id="1"
                          template_id="1"

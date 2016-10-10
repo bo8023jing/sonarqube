@@ -4,7 +4,8 @@
                         kee="my_template_20130102_030405"
                         description="my description"
                         created_at="[null]"
-                        updated_at="[null]"/>
+                        updated_at="[null]"
+                        organization_uuid="org1"/>
 
   <perm_templates_users id="1"
                         template_id="1"

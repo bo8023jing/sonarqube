@@ -167,6 +167,7 @@ import org.sonar.db.version.v62.CreateTableOrganizations;
 import org.sonar.db.version.v62.DeletePermissionShareDashboard;
 import org.sonar.db.version.v62.MakeOrganizationUuidNotNullOnGroups;
 import org.sonar.db.version.v62.PopulateOrganizationUuidOfGroups;
+import org.sonar.db.version.v62.PopulateOrganizationUuidOfUserRoles;
 
 public class MigrationStepModule extends Module {
   @Override
@@ -354,7 +355,8 @@ public class MigrationStepModule extends Module {
       PopulateOrganizationUuidOfGroups.class,
       MakeOrganizationUuidNotNullOnGroups.class,
       AddOrganizationUuidToUserRoles.class,
-      AddOrganizationUuidToPermissionTemplates.class
+      AddOrganizationUuidToPermissionTemplates.class,
+      PopulateOrganizationUuidOfUserRoles.class
     );
   }
 }
