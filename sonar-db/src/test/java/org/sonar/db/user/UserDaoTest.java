@@ -22,13 +22,13 @@ package org.sonar.db.user;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.sonar.api.user.UserQuery;
 import org.sonar.api.utils.DateUtils;
 import org.sonar.api.utils.System2;
+import org.sonar.api.utils.internal.TestSystem2;
 import org.sonar.db.DbClient;
 import org.sonar.db.DbSession;
 import org.sonar.db.DbTester;
@@ -39,6 +39,7 @@ import org.sonar.db.issue.IssueFilterDto;
 import org.sonar.db.issue.IssueFilterFavouriteDto;
 import org.sonar.db.measure.MeasureFilterDto;
 import org.sonar.db.measure.MeasureFilterFavouriteDto;
+import org.sonar.db.permission.UserPermissionDto;
 import org.sonar.db.property.PropertyDto;
 import org.sonar.db.property.PropertyQuery;
 
@@ -46,33 +47,25 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.sonar.db.user.GroupMembershipQuery.IN;
 import static org.sonar.db.user.GroupMembershipQuery.builder;
 import static org.sonar.db.user.UserTesting.newUserDto;
 
 public class UserDaoTest {
 
+  private static final long NOW = 1500000000000L;
+
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  System2 system2 = mock(System2.class);
+  private System2 system2 = new TestSystem2().setNow(NOW);
 
   @Rule
   public DbTester db = DbTester.create(system2);
 
-  static final long NOW = 1500000000000L;
-
-  DbClient dbClient = db.getDbClient();
-
-  UserDao underTest = db.getDbClient().userDao();
-  final DbSession session = db.getSession();
-
-  @Before
-  public void setUp() throws Exception {
-    when(system2.now()).thenReturn(NOW);
-  }
+  private DbClient dbClient = db.getDbClient();
+  private DbSession session = db.getSession();
+  private UserDao underTest = db.getDbClient().userDao();
 
   @Test
   public void selectUsersIds() {
@@ -82,7 +75,7 @@ public class UserDaoTest {
     assertThat(users).hasSize(2);
     assertThat(users).extracting("login").containsOnly("marius", "inactive_user");
 
-    assertThat(underTest.selectByIds(session, Collections.<Long>emptyList())).isEmpty();
+    assertThat(underTest.selectByIds(session, Collections.emptyList())).isEmpty();
   }
 
   @Test
@@ -116,7 +109,7 @@ public class UserDaoTest {
   @Test
   public void selectUsersByLogins_empty_logins() {
     // no need to access db
-    Collection<UserDto> users = underTest.selectByLogins(Collections.<String>emptyList());
+    Collection<UserDto> users = underTest.selectByLogins(Collections.emptyList());
     assertThat(users).isEmpty();
   }
 
@@ -132,7 +125,7 @@ public class UserDaoTest {
     users = underTest.selectByOrderedLogins(session, asList("U2", "U3", "U1"));
     assertThat(users).extracting("login").containsExactly("U2", "U1");
 
-    assertThat(underTest.selectByOrderedLogins(session, Collections.<String>emptyList())).isEmpty();
+    assertThat(underTest.selectByOrderedLogins(session, Collections.emptyList())).isEmpty();
   }
 
   @Test
@@ -535,7 +528,7 @@ public class UserDaoTest {
     return dto;
   }
 
-  private org.sonar.db.permission.UserPermissionDto insertUserPermission(UserDto user) {
+  private UserPermissionDto insertUserPermission(UserDto user) {
     String permission = randomAlphanumeric(64);
     org.sonar.db.permission.UserPermissionDto dto = new org.sonar.db.permission.UserPermissionDto(permission, user.getId(), null);
     dbClient.userPermissionDao().insert(session, dto);
@@ -543,9 +536,7 @@ public class UserDaoTest {
   }
 
   private UserGroupDto insertUserGroup(UserDto user) {
-    GroupDto group = new GroupDto().setName(randomAlphanumeric(30));
-    dbClient.groupDao().insert(session, group);
-
+    GroupDto group = dbClient.groupDao().insert(session, GroupTesting.newGroupDto());
     UserGroupDto dto = new UserGroupDto().setUserId(user.getId()).setGroupId(group.getId());
     dbClient.userGroupDao().insert(session, dto);
     return dto;

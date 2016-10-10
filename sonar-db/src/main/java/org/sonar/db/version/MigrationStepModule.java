@@ -163,6 +163,8 @@ import org.sonar.db.version.v62.AddOrganizationUuidToGroups;
 import org.sonar.db.version.v62.CreateDefaultOrganization;
 import org.sonar.db.version.v62.CreateTableOrganizations;
 import org.sonar.db.version.v62.DeletePermissionShareDashboard;
+import org.sonar.db.version.v62.MakeOrganizationUuidNotNullOnGroups;
+import org.sonar.db.version.v62.PopulateOrganizationUuidOfGroups;
 
 public class MigrationStepModule extends Module {
   @Override
@@ -346,7 +348,9 @@ public class MigrationStepModule extends Module {
       CreateTableOrganizations.class,
       CreateDefaultOrganization.class,
       DeletePermissionShareDashboard.class,
-      AddOrganizationUuidToGroups.class
+      AddOrganizationUuidToGroups.class,
+      PopulateOrganizationUuidOfGroups.class,
+      MakeOrganizationUuidNotNullOnGroups.class
     );
   }
 }

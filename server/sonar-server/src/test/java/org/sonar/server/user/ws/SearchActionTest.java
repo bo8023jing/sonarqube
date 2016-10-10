@@ -200,8 +200,8 @@ public class SearchActionTest {
     loginAsAdmin();
     List<UserDto> users = injectUsers(1);
 
-    GroupDto group1 = dbClient.groupDao().insert(dbSession, new GroupDto().setName("sonar-users"));
-    GroupDto group2 = dbClient.groupDao().insert(dbSession, new GroupDto().setName("sonar-admins"));
+    GroupDto group1 = dbClient.groupDao().insert(dbSession, newGroupDto().setName("sonar-users"));
+    GroupDto group2 = dbClient.groupDao().insert(dbSession, newGroupDto().setName("sonar-admins"));
     dbClient.userGroupDao().insert(dbSession, new UserGroupDto().setGroupId(group1.getId()).setUserId(users.get(0).getId()));
     dbClient.userGroupDao().insert(dbSession, new UserGroupDto().setGroupId(group2.getId()).setUserId(users.get(0).getId()));
     dbSession.commit();

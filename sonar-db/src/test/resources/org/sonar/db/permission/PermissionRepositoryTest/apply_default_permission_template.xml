@@ -18,9 +18,11 @@
             id="123"/>
 
   <groups id="100"
-          name="sonar-administrators"/>
+          name="sonar-administrators"
+          organization_uuid="org1"/>
   <groups id="101"
-          name="sonar-users"/>
+          name="sonar-users"
+          organization_uuid="org1"/>
 
   <users id="200"
          login="marius"

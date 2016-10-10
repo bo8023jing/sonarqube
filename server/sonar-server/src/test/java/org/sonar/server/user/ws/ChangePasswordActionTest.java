@@ -31,7 +31,7 @@ import org.sonar.db.DbClient;
 import org.sonar.db.DbSession;
 import org.sonar.db.DbTester;
 import org.sonar.db.user.GroupDao;
-import org.sonar.db.user.GroupDto;
+import org.sonar.db.user.GroupTesting;
 import org.sonar.db.user.UserDao;
 import org.sonar.db.user.UserGroupDao;
 import org.sonar.server.es.EsTester;
@@ -83,7 +83,7 @@ public class ChangePasswordActionTest {
     GroupDao groupDao = new GroupDao(system2);
     dbClient = new DbClient(dbTester.database(), dbTester.myBatis(), userDao, userGroupDao, groupDao);
     session = dbClient.openSession(false);
-    groupDao.insert(session, new GroupDto().setName("sonar-users"));
+    groupDao.insert(session, GroupTesting.newGroupDto().setName("sonar-users"));
     session.commit();
 
     UserIndexer userIndexer = new UserIndexer(dbClient, esTester.client());

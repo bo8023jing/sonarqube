@@ -36,8 +36,6 @@ public interface RoleMapper {
    */
   List<String> selectGroupPermissions(@Param("groupName") String groupName, @Nullable @Param("resourceId") Long resourceId, @Param("isAnyOneGroup") Boolean isAnyOneGroup);
 
-  void insertGroupRole(GroupPermissionDto dto);
-
   void deleteGroupRole(GroupPermissionDto dto);
 
   void deleteGroupRolesByResourceId(long projectId);

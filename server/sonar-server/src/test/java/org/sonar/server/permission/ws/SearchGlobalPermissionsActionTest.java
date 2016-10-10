@@ -30,7 +30,9 @@ import org.sonar.db.DbTester;
 import org.sonar.db.permission.GroupPermissionDto;
 import org.sonar.db.permission.UserPermissionDto;
 import org.sonar.db.user.GroupDto;
+import org.sonar.db.user.GroupTesting;
 import org.sonar.db.user.UserDto;
+import org.sonar.db.user.UserTesting;
 import org.sonar.server.exceptions.ForbiddenException;
 import org.sonar.server.exceptions.UnauthorizedException;
 import org.sonar.server.i18n.I18nRule;
@@ -55,8 +57,8 @@ public class SearchGlobalPermissionsActionTest {
   public DbTester db = DbTester.create(System2.INSTANCE);
   @Rule
   public UserSessionRule userSession = UserSessionRule.standalone();
-  WsActionTester ws;
-  I18nRule i18n = new I18nRule();
+  private WsActionTester ws;
+  private I18nRule i18n = new I18nRule();
 
   @Before
   public void setUp() {
@@ -148,11 +150,11 @@ public class SearchGlobalPermissionsActionTest {
   }
 
   private static UserDto newUserDto(String login, String name) {
-    return new UserDto().setLogin(login).setName(name).setActive(true);
+    return UserTesting.newUserDto().setLogin(login).setName(name).setActive(true);
   }
 
   private static GroupDto newGroupDto(String name, String description) {
-    return new GroupDto().setName(name).setDescription(description);
+    return GroupTesting.newGroupDto().setName(name).setDescription(description);
   }
 
   private static GroupPermissionDto newGroupRole(String role, @Nullable Long groupId) {

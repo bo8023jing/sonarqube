@@ -33,7 +33,6 @@ import org.sonar.db.loadedtemplate.LoadedTemplateDto;
 import org.sonar.db.permission.template.PermissionTemplateDao;
 import org.sonar.db.permission.template.PermissionTemplateDto;
 import org.sonar.db.user.GroupDao;
-import org.sonar.db.user.GroupDto;
 import org.sonar.db.user.UserDao;
 import org.sonar.server.permission.DefaultPermissionTemplates;
 import org.sonar.server.platform.PersistentSettings;
@@ -47,6 +46,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static org.sonar.db.user.GroupTesting.newGroupDto;
 import static org.sonar.server.permission.DefaultPermissionTemplates.DEFAULT_TEMPLATE_PROPERTY;
 import static org.sonar.server.permission.DefaultPermissionTemplates.defaultRootQualifierTemplateProperty;
 
@@ -86,8 +86,8 @@ public class RegisterPermissionTemplatesTest {
       .thenReturn(0);
     when(permissionTemplateDao.insert(dbSession, DefaultPermissionTemplates.DEFAULT_TEMPLATE))
       .thenReturn(permissionTemplate);
-    when(groupDao.selectByName(dbSession, DefaultGroups.ADMINISTRATORS)).thenReturn(new GroupDto().setId(1L));
-    when(groupDao.selectByName(dbSession, DefaultGroups.USERS)).thenReturn(new GroupDto().setId(2L));
+    when(groupDao.selectByName(dbSession, DefaultGroups.ADMINISTRATORS)).thenReturn(newGroupDto().setId(1L));
+    when(groupDao.selectByName(dbSession, DefaultGroups.USERS)).thenReturn(newGroupDto().setId(2L));
 
     RegisterPermissionTemplates initializer = new RegisterPermissionTemplates(dbClient, settings);
     initializer.start();

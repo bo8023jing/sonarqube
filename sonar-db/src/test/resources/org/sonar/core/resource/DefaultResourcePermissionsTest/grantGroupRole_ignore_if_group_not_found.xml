@@ -1,7 +1,14 @@
 <dataset>
-  <groups id="100" name="sonar-administrators"/>
-  <groups id="101" name="sonar-users"/>
+  <groups id="100"
+          name="sonar-administrators"
+          organization_uuid="org1"/>
+  <groups id="101"
+          name="sonar-users"
+          organization_uuid="org1"/>
 
   <!-- already existed -->
-  <group_roles id="1" group_id="[null]" resource_id="123" role="admin"/>
+  <group_roles id="1"
+               group_id="[null]"
+               resource_id="123"
+               role="admin"/>
 </dataset>

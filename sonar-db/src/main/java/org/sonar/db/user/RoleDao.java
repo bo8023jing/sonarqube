@@ -28,6 +28,10 @@ import org.sonar.db.permission.GroupPermissionDto;
 
 public class RoleDao implements Dao {
 
+  /**
+   * All the projects on which the user has {@code permission}, directly or through
+   * groups.
+   */
   public List<Long> selectComponentIdsByPermissionAndUserId(DbSession dbSession, String permission, long userId) {
     return mapper(dbSession).selectComponentIdsByPermissionAndUserId(permission, userId);
   }
@@ -39,14 +43,6 @@ public class RoleDao implements Dao {
   @Deprecated
   public List<String> selectGroupPermissions(DbSession session, String groupName, @Nullable Long resourceId) {
     return session.getMapper(RoleMapper.class).selectGroupPermissions(groupName, resourceId, DefaultGroups.isAnyone(groupName));
-  }
-
-  /**
-   * @deprecated replaced by {@link org.sonar.db.permission.GroupPermissionDao#insert(DbSession, GroupPermissionDto)}
-   */
-  @Deprecated
-  public void insertGroupRole(DbSession session, GroupPermissionDto dto) {
-    mapper(session).insertGroupRole(dto);
   }
 
   /**
