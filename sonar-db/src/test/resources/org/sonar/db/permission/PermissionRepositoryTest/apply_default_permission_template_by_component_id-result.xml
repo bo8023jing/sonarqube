@@ -30,7 +30,8 @@
   <user_roles id="1"
               user_id="200"
               resource_id="1"
-              role="admin"/>
+              role="admin"
+              organization_uuid="org1"/>
 
   <!-- new groups permissions : sonar-administrators (admin), sonar-users (user & codeviewer), Anyone (user & codeviewer) -->
   <group_roles id="3"
@@ -62,7 +63,8 @@
   <user_roles id="2"
               user_id="200"
               resource_id="123"
-              role="admin"/>
+              role="admin"
+              organization_uuid="org1"/>
 
   <!-- default permission template for all qualifiers -->
   <permission_templates id="1"

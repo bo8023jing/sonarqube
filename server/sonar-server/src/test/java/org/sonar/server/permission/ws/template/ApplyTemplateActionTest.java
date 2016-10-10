@@ -27,10 +27,8 @@ import org.sonar.api.config.MapSettings;
 import org.sonar.api.web.UserRole;
 import org.sonar.core.permission.GlobalPermissions;
 import org.sonar.db.component.ComponentDto;
-import org.sonar.db.permission.GroupPermissionDto;
 import org.sonar.db.permission.PermissionQuery;
 import org.sonar.db.permission.PermissionRepository;
-import org.sonar.db.permission.UserPermissionDto;
 import org.sonar.db.permission.template.PermissionTemplateDto;
 import org.sonar.db.user.GroupDto;
 import org.sonar.db.user.UserDto;
@@ -98,10 +96,10 @@ public class ApplyTemplateActionTest extends BasePermissionWsTest<ApplyTemplateA
     addGroupToTemplate(group2, template2, UserRole.USER);
 
     project = componentTester.insertComponent(newProjectDto("project-uuid-1"));
-    addUserPermissionToProject(user1, project, UserRole.ADMIN);
-    addUserPermissionToProject(user2, project, UserRole.ADMIN);
-    addGroupPermissionToProject(group1, project, UserRole.ADMIN);
-    addGroupPermissionToProject(group2, project, UserRole.ADMIN);
+    userTester.insertProjectPermissionOnUser(user1, UserRole.ADMIN, project);
+    userTester.insertProjectPermissionOnUser(user2, UserRole.ADMIN, project);
+    userTester.insertProjectPermissionOnGroup(group1, UserRole.ADMIN, project);
+    userTester.insertProjectPermissionOnGroup(group2, UserRole.ADMIN, project);
   }
 
   @Test
@@ -214,19 +212,6 @@ public class ApplyTemplateActionTest extends BasePermissionWsTest<ApplyTemplateA
 
   private void addGroupToTemplate(GroupDto group, PermissionTemplateDto permissionTemplate, String permission) {
     db.getDbClient().permissionTemplateDao().insertGroupPermission(db.getSession(), permissionTemplate.getId(), group.getId(), permission);
-    db.commit();
-  }
-
-  private void addUserPermissionToProject(UserDto user, ComponentDto project, String permission) {
-    db.getDbClient().userPermissionDao().insert(db.getSession(), new UserPermissionDto(permission, user.getId(), project.getId()));
-    db.commit();
-  }
-
-  private void addGroupPermissionToProject(GroupDto group, ComponentDto project, String permission) {
-    db.getDbClient().groupPermissionDao().insert(db.getSession(), new GroupPermissionDto()
-      .setRole(permission)
-      .setResourceId(project.getId())
-      .setGroupId(group.getId()));
     db.commit();
   }
 

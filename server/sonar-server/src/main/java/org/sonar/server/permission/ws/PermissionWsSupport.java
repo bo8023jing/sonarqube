@@ -20,11 +20,13 @@
 package org.sonar.server.permission.ws;
 
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.sonar.api.resources.ResourceTypes;
 import org.sonar.api.server.ws.Request;
 import org.sonar.db.DbClient;
 import org.sonar.db.DbSession;
 import org.sonar.db.component.ComponentDto;
+import org.sonar.db.organization.OrganizationDto;
 import org.sonar.db.permission.template.PermissionTemplateDto;
 import org.sonar.db.user.UserDto;
 import org.sonar.server.component.ComponentFinder;
@@ -53,6 +55,10 @@ public class PermissionWsSupport {
     this.componentFinder = componentFinder;
     this.groupWsSupport = groupWsSupport;
     this.resourceTypes = resourceTypes;
+  }
+
+  public OrganizationDto findOrganization(DbSession dbSession, @Nullable String organizationKey) {
+    return groupWsSupport.findOrganizationByKey(dbSession, organizationKey);
   }
 
   /**

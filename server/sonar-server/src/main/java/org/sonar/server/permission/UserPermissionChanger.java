@@ -49,8 +49,8 @@ public class UserPermissionChanger {
 
     switch (change.getOperation()) {
       case ADD:
-        UserPermissionDto userPermissionDto = new UserPermissionDto(change.getPermission(), change.getUserId().getId(), change.getProjectId());
-        dbClient.userPermissionDao().insert(dbSession, userPermissionDto);
+        UserPermissionDto dto = new UserPermissionDto(change.getOrganizationUuid(), change.getPermission(), change.getUserId().getId(), change.getProjectId());
+        dbClient.userPermissionDao().insert(dbSession, dto);
         break;
       case REMOVE:
         checkOtherAdminUsersExist(dbSession, change);

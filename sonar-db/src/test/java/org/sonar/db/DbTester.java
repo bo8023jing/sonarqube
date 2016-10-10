@@ -64,8 +64,10 @@ import org.picocontainer.containers.TransientPicoContainer;
 import org.sonar.api.utils.System2;
 import org.sonar.api.utils.log.Loggers;
 import org.sonar.core.util.SequenceUuidFactory;
+import org.sonar.db.component.ComponentDbTester;
 import org.sonar.db.organization.OrganizationDto;
 import org.sonar.db.organization.OrganizationTesting;
+import org.sonar.db.user.UserDbTester;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -91,10 +93,15 @@ public class DbTester extends ExternalResource {
   private boolean started = false;
   private OrganizationDto defaultOrganization;
 
+  private final UserDbTester userTester;
+  private final ComponentDbTester componentTester;
+
   private DbTester(System2 system2, @Nullable String schemaPath) {
     this.system2 = system2;
     this.db = TestDb.create(schemaPath);
     initDbClient();
+    this.userTester = new UserDbTester(this);
+    this.componentTester = new ComponentDbTester(this);
   }
 
   public static DbTester create(System2 system2) {
@@ -148,6 +155,14 @@ public class DbTester extends ExternalResource {
   public OrganizationDto getDefaultOrganization() {
     checkState(defaultOrganization != null, "Default organization has not been created");
     return defaultOrganization;
+  }
+
+  public UserDbTester users() {
+    return userTester;
+  }
+
+  public ComponentDbTester components() {
+    return componentTester;
   }
 
   @Override

@@ -25,6 +25,7 @@ import org.sonar.api.server.ws.Response;
 import org.sonar.api.server.ws.WebService;
 import org.sonar.db.DbClient;
 import org.sonar.db.DbSession;
+import org.sonar.db.organization.OrganizationDto;
 import org.sonar.server.permission.PermissionChange;
 import org.sonar.server.permission.PermissionUpdater;
 import org.sonar.server.permission.ProjectId;
@@ -32,9 +33,11 @@ import org.sonar.server.permission.UserId;
 import org.sonar.server.permission.UserPermissionChange;
 
 import static java.util.Arrays.asList;
+import static org.sonar.server.permission.ws.PermissionsWsParametersBuilder.createOrganizationParameter;
 import static org.sonar.server.permission.ws.PermissionsWsParametersBuilder.createPermissionParameter;
 import static org.sonar.server.permission.ws.PermissionsWsParametersBuilder.createProjectParameters;
 import static org.sonar.server.permission.ws.PermissionsWsParametersBuilder.createUserLoginParameter;
+import static org.sonarqube.ws.client.permission.PermissionsWsParameters.PARAM_ORGANIZATION_KEY;
 import static org.sonarqube.ws.client.permission.PermissionsWsParameters.PARAM_PERMISSION;
 import static org.sonarqube.ws.client.permission.PermissionsWsParameters.PARAM_USER_LOGIN;
 
@@ -65,25 +68,23 @@ public class AddUserAction implements PermissionsWsAction {
     createPermissionParameter(action);
     createUserLoginParameter(action);
     createProjectParameters(action);
+    createOrganizationParameter(action);
   }
 
   @Override
   public void handle(Request request, Response response) throws Exception {
-    DbSession dbSession = dbClient.openSession(false);
-    try {
+    try (DbSession dbSession = dbClient.openSession(false)) {
       UserId user = support.findUser(dbSession, request.mandatoryParam(PARAM_USER_LOGIN));
       Optional<ProjectId> projectId = support.findProject(dbSession, request);
-
+      OrganizationDto org = support.findOrganization(dbSession, request.param(PARAM_ORGANIZATION_KEY));
       PermissionChange change = new UserPermissionChange(
         PermissionChange.Operation.ADD,
+        org.getUuid(),
         request.mandatoryParam(PARAM_PERMISSION),
         projectId.orElse(null),
         user);
       permissionUpdater.apply(dbSession, asList(change));
-    } finally {
-      dbClient.closeSession(dbSession);
     }
-
     response.noContent();
   }
 }

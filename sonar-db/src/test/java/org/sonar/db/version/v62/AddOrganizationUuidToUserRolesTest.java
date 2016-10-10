@@ -27,21 +27,22 @@ import org.junit.rules.ExpectedException;
 import org.sonar.api.utils.System2;
 import org.sonar.db.DbTester;
 
-public class AddOrganizationUuidToGroupsTest {
+
+public class AddOrganizationUuidToUserRolesTest {
 
   @Rule
-  public final DbTester dbTester = DbTester.createForSchema(System2.INSTANCE, AddOrganizationUuidToGroupsTest.class, "previous-groups.sql");
+  public final DbTester dbTester = DbTester.createForSchema(System2.INSTANCE, AddOrganizationUuidToUserRolesTest.class, "previous-user_roles.sql");
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  private AddOrganizationUuidToGroups underTest = new AddOrganizationUuidToGroups(dbTester.database());
+  private AddOrganizationUuidToUserRoles underTest = new AddOrganizationUuidToUserRoles(dbTester.database());
 
   @Test
   public void creates_table_on_empty_db() throws SQLException {
     underTest.execute();
 
-    dbTester.assertColumnDefinition("groups", "organization_uuid", Types.VARCHAR, 40, true);
+    dbTester.assertColumnDefinition("user_roles", "organization_uuid", Types.VARCHAR, 40, true);
   }
 
   @Test
@@ -52,4 +53,5 @@ public class AddOrganizationUuidToGroupsTest {
 
     underTest.execute();
   }
+
 }

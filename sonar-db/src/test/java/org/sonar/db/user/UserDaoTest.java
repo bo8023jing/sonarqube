@@ -530,7 +530,7 @@ public class UserDaoTest {
 
   private UserPermissionDto insertUserPermission(UserDto user) {
     String permission = randomAlphanumeric(64);
-    org.sonar.db.permission.UserPermissionDto dto = new org.sonar.db.permission.UserPermissionDto(permission, user.getId(), null);
+    UserPermissionDto dto = new UserPermissionDto(db.getDefaultOrganization().getUuid(), permission, user.getId(), null);
     dbClient.userPermissionDao().insert(session, dto);
     return dto;
   }

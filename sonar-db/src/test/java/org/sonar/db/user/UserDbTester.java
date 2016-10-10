@@ -105,6 +105,13 @@ public class UserDbTester {
 
   // GROUP PERMISSIONS
 
+  /**
+   * Grant permission to virtual group "anyone" in default organization
+   */
+  public GroupPermissionDto insertPermissionOnAnyone(String permission) {
+    return insertPermissionOnAnyone(db.getDefaultOrganization(), permission);
+  }
+
   public GroupPermissionDto insertPermissionOnAnyone(OrganizationDto org, String permission) {
     // TODO propagate organization
     GroupPermissionDto dto = new GroupPermissionDto().setGroupId(null).setRole(permission);
@@ -118,6 +125,10 @@ public class UserDbTester {
     db.getDbClient().groupPermissionDao().insert(db.getSession(), dto);
     db.commit();
     return dto;
+  }
+
+  public GroupPermissionDto insertProjectPermissionOnAnyone(String permission, ComponentDto project) {
+    return insertProjectPermissionOnAnyone(db.getDefaultOrganization(), permission, project);
   }
 
   public GroupPermissionDto insertProjectPermissionOnAnyone(OrganizationDto org, String permission, ComponentDto project) {
@@ -148,15 +159,35 @@ public class UserDbTester {
 
   // USER PERMISSIONS
 
+  /**
+   * Grant global permission on default organization
+   */
   public UserPermissionDto insertPermissionOnUser(UserDto user, String permission) {
-    UserPermissionDto dto = new UserPermissionDto(permission, user.getId(), null);
+    return insertPermissionOnUser(db.getDefaultOrganization(), user, permission);
+  }
+
+  /**
+   * Grant global permission
+   */
+  public UserPermissionDto insertPermissionOnUser(OrganizationDto org, UserDto user, String permission) {
+    UserPermissionDto dto = new UserPermissionDto(org.getUuid(), permission, user.getId(), null);
     db.getDbClient().userPermissionDao().insert(db.getSession(), dto);
     db.commit();
     return dto;
   }
 
+  /**
+   * Grant permission on given project in default organization
+   */
   public UserPermissionDto insertProjectPermissionOnUser(UserDto user, String permission, ComponentDto project) {
-    UserPermissionDto dto = new UserPermissionDto(permission, user.getId(), project.getId());
+    return insertProjectPermissionOnUser(db.getDefaultOrganization(), user, permission, project);
+  }
+
+  /**
+   * Grant permission on given project
+   */
+  public UserPermissionDto insertProjectPermissionOnUser(OrganizationDto org, UserDto user, String permission, ComponentDto project) {
+    UserPermissionDto dto = new UserPermissionDto(org.getUuid(), permission, user.getId(), project.getId());
     db.getDbClient().userPermissionDao().insert(db.getSession(), dto);
     db.commit();
     return dto;

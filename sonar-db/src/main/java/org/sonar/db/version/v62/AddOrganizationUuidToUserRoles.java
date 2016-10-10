@@ -17,23 +17,29 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-package org.sonar.server.permission;
+package org.sonar.db.version.v62;
 
-import javax.annotation.Nullable;
+import java.sql.SQLException;
+import org.sonar.db.Database;
+import org.sonar.db.version.AddColumnsBuilder;
+import org.sonar.db.version.DdlChange;
+import org.sonar.db.version.VarcharColumnDef;
 
-import static java.util.Objects.requireNonNull;
+import static org.sonar.db.version.VarcharColumnDef.newVarcharColumnDefBuilder;
 
-public class UserPermissionChange extends PermissionChange {
+public class AddOrganizationUuidToUserRoles extends DdlChange {
 
-  private final UserId userId;
-
-  public UserPermissionChange(Operation operation, String organizationUuid, String permission, @Nullable ProjectId projectId,
-    UserId userId) {
-    super(operation, organizationUuid, permission, projectId);
-    this.userId = requireNonNull(userId);
+  public AddOrganizationUuidToUserRoles(Database db) {
+    super(db);
   }
 
-  public UserId getUserId() {
-    return userId;
+  @Override
+  public void execute(Context context) throws SQLException {
+    VarcharColumnDef column = newVarcharColumnDefBuilder()
+      .setColumnName("organization_uuid")
+      .setIsNullable(true)
+      .setLimit(40)
+      .build();
+    context.execute(new AddColumnsBuilder(getDialect(), "user_roles").addColumn(column).build());
   }
 }

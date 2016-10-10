@@ -28,13 +28,9 @@ import org.sonar.api.utils.System2;
 import org.sonar.api.web.UserRole;
 import org.sonar.core.permission.GlobalPermissions;
 import org.sonar.db.DbClient;
-import org.sonar.db.DbSession;
 import org.sonar.db.DbTester;
-import org.sonar.db.component.ComponentDbTester;
 import org.sonar.db.component.ComponentDto;
 import org.sonar.db.component.ComponentTesting;
-import org.sonar.db.permission.GroupPermissionDto;
-import org.sonar.db.permission.UserPermissionDto;
 import org.sonar.db.user.UserDto;
 import org.sonar.server.exceptions.ForbiddenException;
 
@@ -47,33 +43,26 @@ import static org.sonar.server.user.ServerUserSession.createForAnonymous;
 import static org.sonar.server.user.ServerUserSession.createForUser;
 
 public class ServerUserSessionTest {
-  static final String LOGIN = "marius";
-
-  static final String PROJECT_UUID = "ABCD";
-  static final String FILE_KEY = "com.foo:Bar:BarFile.xoo";
-  static final String FILE_UUID = "BCDE";
+  private static final String LOGIN = "marius";
+  private static final String PROJECT_UUID = "ABCD";
+  private static final String FILE_KEY = "com.foo:Bar:BarFile.xoo";
+  private static final String FILE_UUID = "BCDE";
 
   @Rule
-  public DbTester dbTester = DbTester.create(System2.INSTANCE);
-
+  public DbTester db = DbTester.create(System2.INSTANCE);
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  ComponentDbTester componentDbTester = new ComponentDbTester(dbTester);
-
-  DbClient dbClient = dbTester.getDbClient();
-
-  DbSession dbSession = dbTester.getSession();
-
-  UserDto userDto = newUserDto().setLogin(LOGIN);
-  ComponentDto project, file;
+  private DbClient dbClient = db.getDbClient();
+  private UserDto userDto;
+  private ComponentDto project;
+  private ComponentDto file;
 
   @Before
   public void setUp() throws Exception {
-    project = componentDbTester.insertComponent(ComponentTesting.newProjectDto(PROJECT_UUID));
-    file = componentDbTester.insertComponent(ComponentTesting.newFileDto(project, null, FILE_UUID).setKey(FILE_KEY));
-    dbClient.userDao().insert(dbSession, userDto);
-    dbSession.commit();
+    project = db.components().insertComponent(ComponentTesting.newProjectDto(PROJECT_UUID));
+    file = db.components().insertComponent(ComponentTesting.newFileDto(project, null, FILE_UUID).setKey(FILE_KEY));
+    userDto = db.users().insertUser(newUserDto().setLogin(LOGIN));
   }
 
   @Test
@@ -161,8 +150,8 @@ public class ServerUserSessionTest {
 
   @Test
   public void check_component_key_permission_ko() {
-    ComponentDto project2 = componentDbTester.insertComponent(ComponentTesting.newProjectDto());
-    ComponentDto file2 = componentDbTester.insertComponent(ComponentTesting.newFileDto(project2, null));
+    ComponentDto project2 = db.components().insertComponent(ComponentTesting.newProjectDto());
+    ComponentDto file2 = db.components().insertComponent(ComponentTesting.newFileDto(project2, null));
     addProjectPermissions(project, UserRole.USER);
     UserSession session = newUserSession(userDto);
 
@@ -189,8 +178,8 @@ public class ServerUserSessionTest {
 
   @Test
   public void check_component_key_permission_when_project_not_found() {
-    ComponentDto project2 = componentDbTester.insertComponent(ComponentTesting.newProjectDto());
-    ComponentDto file2 = componentDbTester.insertComponent(ComponentTesting.newFileDto(project2, null)
+    ComponentDto project2 = db.components().insertComponent(ComponentTesting.newProjectDto());
+    ComponentDto file2 = db.components().insertComponent(ComponentTesting.newFileDto(project2, null)
       // Simulate file is linked to an invalid project
       .setProjectUuid("INVALID"));
     addProjectPermissions(project, UserRole.USER);
@@ -243,7 +232,7 @@ public class ServerUserSessionTest {
 
   @Test
   public void has_global_permission_for_anonymous() throws Exception {
-    addAnonymousPermissions(null, "profileadmin", "admin");
+    addAnyonePermissions(null, "profileadmin", "admin");
     UserSession session = newAnonymousSession();
 
     assertThat(session.getLogin()).isNull();
@@ -256,7 +245,7 @@ public class ServerUserSessionTest {
 
   @Test
   public void has_project_permission_for_anonymous() throws Exception {
-    addAnonymousPermissions(project, UserRole.USER);
+    addAnyonePermissions(project, UserRole.USER);
     UserSession session = newAnonymousSession();
 
     assertThat(session.hasComponentPermission(UserRole.USER, FILE_KEY)).isTrue();
@@ -280,21 +269,24 @@ public class ServerUserSessionTest {
     addPermissions(component, permissions);
   }
 
-  private void addPermissions( @Nullable ComponentDto component, String... permissions) {
+  private void addPermissions(@Nullable ComponentDto component, String... permissions) {
     for (String permission : permissions) {
-      dbClient.userPermissionDao().insert(dbSession, new UserPermissionDto(permission, userDto.getId(), component == null ? null : component.getId()));
+      if (component == null) {
+        db.users().insertPermissionOnUser(userDto, permission);
+      } else {
+        db.users().insertProjectPermissionOnUser(userDto, permission, component);
+      }
     }
-    dbSession.commit();
   }
 
-  private void addAnonymousPermissions(@Nullable ComponentDto component, String... permissions) {
+  private void addAnyonePermissions(@Nullable ComponentDto component, String... permissions) {
     for (String permission : permissions) {
-      dbClient.groupPermissionDao().insert(dbSession, new GroupPermissionDto()
-        .setRole(permission)
-        .setResourceId(component == null ? null : component.getId()));
+      if (component == null) {
+        db.users().insertPermissionOnAnyone(permission);
+      } else {
+        db.users().insertProjectPermissionOnAnyone(permission, component);
+      }
     }
-    dbSession.commit();
   }
-
 
 }

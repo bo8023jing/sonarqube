@@ -136,7 +136,7 @@ public class GroupWsSupport {
    * @return non-null organization
    * @throws NotFoundException if no organizations match the provided key
    */
-  OrganizationDto findOrganizationByKey(DbSession dbSession, @Nullable String key) {
+  public OrganizationDto findOrganizationByKey(DbSession dbSession, @Nullable String key) {
     String effectiveKey = key;
     if (effectiveKey == null) {
       effectiveKey = defaultOrganizationProvider.get().getKey();

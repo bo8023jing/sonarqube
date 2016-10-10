@@ -160,6 +160,7 @@ import org.sonar.db.version.v61.PopulateTableProperties2;
 import org.sonar.db.version.v61.RemoveViewsDefinitionFromProperties;
 import org.sonar.db.version.v61.ShrinkModuleUuidPathOfProjects;
 import org.sonar.db.version.v62.AddOrganizationUuidToGroups;
+import org.sonar.db.version.v62.AddOrganizationUuidToUserRoles;
 import org.sonar.db.version.v62.CreateDefaultOrganization;
 import org.sonar.db.version.v62.CreateTableOrganizations;
 import org.sonar.db.version.v62.DeletePermissionShareDashboard;
@@ -350,7 +351,8 @@ public class MigrationStepModule extends Module {
       DeletePermissionShareDashboard.class,
       AddOrganizationUuidToGroups.class,
       PopulateOrganizationUuidOfGroups.class,
-      MakeOrganizationUuidNotNullOnGroups.class
+      MakeOrganizationUuidNotNullOnGroups.class,
+      AddOrganizationUuidToUserRoles.class
     );
   }
 }

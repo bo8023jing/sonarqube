@@ -35,11 +35,13 @@ public abstract class PermissionChange {
   }
 
   private final Operation operation;
+  private final String organizationUuid;
   private final String permission;
   private final ProjectId projectId;
 
-  public PermissionChange(Operation operation, String permission, @Nullable ProjectId projectId) {
+  public PermissionChange(Operation operation, String organizationUuid, String permission, @Nullable ProjectId projectId) {
     this.operation = requireNonNull(operation);
+    this.organizationUuid = requireNonNull(organizationUuid);
     this.permission = requireNonNull(permission);
     this.projectId = projectId;
     if (projectId == null) {
@@ -51,6 +53,10 @@ public abstract class PermissionChange {
 
   public Operation getOperation() {
     return operation;
+  }
+
+  public String getOrganizationUuid() {
+    return organizationUuid;
   }
 
   public String getPermission() {
