@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 import org.sonar.api.utils.System2;
+import org.sonar.api.utils.internal.TestSystem2;
 import org.sonar.core.permission.GlobalPermissions;
 import org.sonar.db.permission.template.PermissionTemplateDto;
 import org.sonar.server.exceptions.BadRequestException;
@@ -32,8 +33,6 @@ import org.sonar.server.permission.ws.BasePermissionWsTest;
 import org.sonar.server.ws.WsTester;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.sonar.test.JsonAssert.assertJson;
 import static org.sonarqube.ws.client.permission.PermissionsWsParameters.CONTROLLER;
 import static org.sonarqube.ws.client.permission.PermissionsWsParameters.PARAM_DESCRIPTION;
@@ -42,17 +41,17 @@ import static org.sonarqube.ws.client.permission.PermissionsWsParameters.PARAM_P
 
 public class CreateTemplateActionTest extends BasePermissionWsTest<CreateTemplateAction> {
 
-  private System2 system = mock(System2.class);
+  private static final long NOW = 1_440_512_328_743L;
+  private System2 system = new TestSystem2().setNow(NOW);
 
   @Override
   protected CreateTemplateAction buildWsAction() {
-    return new CreateTemplateAction(db.getDbClient(), userSession, system);
+    return new CreateTemplateAction(db.getDbClient(), userSession, system, newPermissionWsSupport());
   }
 
   @Before
   public void setUp() {
     userSession.login().setGlobalPermissions(GlobalPermissions.SYSTEM_ADMIN);
-    when(system.now()).thenReturn(1440512328743L);
   }
 
   @Test
@@ -67,8 +66,8 @@ public class CreateTemplateActionTest extends BasePermissionWsTest<CreateTemplat
     assertThat(finance.getDescription()).isEqualTo("Permissions for financially related projects");
     assertThat(finance.getKeyPattern()).isEqualTo(".*\\.finance\\..*");
     assertThat(finance.getUuid()).isNotEmpty();
-    assertThat(finance.getCreatedAt().getTime()).isEqualTo(1440512328743L);
-    assertThat(finance.getUpdatedAt().getTime()).isEqualTo(1440512328743L);
+    assertThat(finance.getCreatedAt().getTime()).isEqualTo(NOW);
+    assertThat(finance.getUpdatedAt().getTime()).isEqualTo(NOW);
   }
 
   @Test
@@ -80,8 +79,8 @@ public class CreateTemplateActionTest extends BasePermissionWsTest<CreateTemplat
     assertThat(finance.getDescription()).isNullOrEmpty();
     assertThat(finance.getKeyPattern()).isNullOrEmpty();
     assertThat(finance.getUuid()).isNotEmpty();
-    assertThat(finance.getCreatedAt().getTime()).isEqualTo(1440512328743L);
-    assertThat(finance.getUpdatedAt().getTime()).isEqualTo(1440512328743L);
+    assertThat(finance.getCreatedAt().getTime()).isEqualTo(NOW);
+    assertThat(finance.getUpdatedAt().getTime()).isEqualTo(NOW);
   }
 
   @Test

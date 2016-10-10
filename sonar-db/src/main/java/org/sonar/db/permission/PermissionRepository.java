@@ -93,8 +93,7 @@ public class PermissionRepository {
     dbClient.userPermissionDao().delete(session, null, project.uuid(), null);
 
     List<PermissionTemplateUserDto> usersPermissions = template.getUserPermissions();
-    // FIXME String organizationUuid = template.getTemplate().getOrganizationUuid();
-    String organizationUuid = "FIXME";
+    String organizationUuid = template.getTemplate().getOrganizationUuid();
     usersPermissions
       .forEach(up -> {
         UserPermissionDto dto = new UserPermissionDto(organizationUuid, up.getPermission(), up.getUserId(), project.getId());
