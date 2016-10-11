@@ -289,8 +289,8 @@ public class CorePropertyDefinitions {
 
       // ORGANIZATIONS
       PropertyDefinition.builder(ORGANIZATIONS_ANYONE_CAN_CREATE)
+        .name("Allow any authenticated user to create organizations")
         .defaultValue(Boolean.toString(ORGANIZATIONS_ANYONE_CAN_CREATE_DEFAULT_VALUE))
-        .name("Allow any authenticated user to create new Organizations")
         .category(CATEGORY_ORGANIZATIONS)
         .type(PropertyType.BOOLEAN)
         .build()));
