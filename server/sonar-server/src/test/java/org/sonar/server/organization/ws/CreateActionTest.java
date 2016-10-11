@@ -29,7 +29,7 @@ import org.junit.rules.ExpectedException;
 import org.sonar.api.config.MapSettings;
 import org.sonar.api.config.Settings;
 import org.sonar.api.server.ws.WebService;
-import org.sonar.api.utils.System2;
+import org.sonar.api.utils.internal.TestSystem2;
 import org.sonar.core.permission.GlobalPermissions;
 import org.sonar.core.util.UuidFactory;
 import org.sonar.core.util.Uuids;
@@ -56,7 +56,7 @@ public class CreateActionTest {
   private static final String SOME_UUID = "uuid";
   private static final long SOME_DATE = 1_200_000L;
 
-  private System2 system2 = mock(System2.class);
+  private TestSystem2 system2 = new TestSystem2();
 
   @Rule
   public UserSessionRule userSession = UserSessionRule.standalone();
@@ -405,7 +405,7 @@ public class CreateActionTest {
 
   private void mockForSuccessfulInsert(String uuid, long now) {
     when(uuidFactory.create()).thenReturn(uuid);
-    when(system2.now()).thenReturn(now);
+    system2.setNow(now);
   }
 
   private CreateWsResponse executeRequest(@Nullable String name, @Nullable String key) {
@@ -484,6 +484,7 @@ public class CreateActionTest {
   }
 
   private void insertOrganization(String key) {
+    system2.setNow(8_777_000L);
     dbTester.getDbClient().organizationDao().insert(dbTester.getSession(), new OrganizationDto()
       .setUuid(key + "_uuid")
       .setKey(key)
