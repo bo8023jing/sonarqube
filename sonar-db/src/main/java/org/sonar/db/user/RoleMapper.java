@@ -42,7 +42,7 @@ public interface RoleMapper {
 
   int countResourceGroupRoles(Long resourceId);
 
-  int countResourceUserRoles(Long resourceId);
+  int countResourceUserRoles(long resourceId);
 
   void deleteGroupRolesByGroupId(long groupId);
 
