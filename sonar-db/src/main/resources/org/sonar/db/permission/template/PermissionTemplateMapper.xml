@@ -50,7 +50,13 @@
 
   <insert id="insertGroupPermission" parameterType="PermissionTemplateGroup">
     INSERT INTO perm_templates_groups (template_id, group_id, permission_reference, created_at, updated_at)
-    VALUES (#{templateId}, #{groupId}, #{permission}, #{createdAt}, #{updatedAt})
+    VALUES (
+    #{templateId,jdbcType=BIGINT},
+    #{groupId,jdbcType=BIGINT},
+    #{permission,jdbcType=VARCHAR},
+    #{createdAt,jdbcType=TIMESTAMP},
+    #{updatedAt,jdbcType=TIMESTAMP}
+    )
   </insert>
 
   <delete id="deleteGroupPermission" parameterType="PermissionTemplateGroup">

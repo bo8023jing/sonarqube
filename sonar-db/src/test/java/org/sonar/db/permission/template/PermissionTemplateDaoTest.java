@@ -181,6 +181,7 @@ public class PermissionTemplateDaoTest {
     db.prepareDbUnit(getClass(), "addGroupPermissionToTemplate.xml");
 
     underTest.insertGroupPermission(dbSession, 1L, 1L, "new_permission");
+    dbSession.commit();
 
     checkTemplateTables("addGroupPermissionToTemplate-result.xml");
   }
@@ -200,6 +201,7 @@ public class PermissionTemplateDaoTest {
     db.prepareDbUnit(getClass(), "addNullGroupPermissionToTemplate.xml");
 
     underTest.insertGroupPermission(dbSession, 1L, null, "new_permission");
+    dbSession.commit();
 
     checkTemplateTables("addNullGroupPermissionToTemplate-result.xml");
   }

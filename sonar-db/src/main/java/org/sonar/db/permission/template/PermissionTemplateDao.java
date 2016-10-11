@@ -200,7 +200,7 @@ public class PermissionTemplateDao implements Dao {
     session.commit();
   }
 
-  public void insertGroupPermission(DbSession session, Long templateId, @Nullable Long groupId, String permission) {
+  public void insertGroupPermission(DbSession session, long templateId, @Nullable Long groupId, String permission) {
     PermissionTemplateGroupDto permissionTemplateGroup = new PermissionTemplateGroupDto()
       .setTemplateId(templateId)
       .setPermission(permission)
@@ -208,7 +208,6 @@ public class PermissionTemplateDao implements Dao {
       .setCreatedAt(now())
       .setUpdatedAt(now());
     mapper(session).insertGroupPermission(permissionTemplateGroup);
-    session.commit();
   }
 
   public void insertGroupPermission(DbSession session, PermissionTemplateGroupDto permissionTemplateGroup) {
