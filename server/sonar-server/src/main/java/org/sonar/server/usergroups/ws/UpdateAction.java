@@ -44,6 +44,7 @@ import static org.sonar.server.usergroups.ws.GroupWsSupport.DESCRIPTION_MAX_LENG
 import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_GROUP_DESCRIPTION;
 import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_GROUP_ID;
 import static org.sonar.server.usergroups.ws.GroupWsSupport.PARAM_GROUP_NAME;
+import static org.sonar.server.usergroups.ws.GroupWsSupport.toProtobuf;
 import static org.sonar.server.ws.WsUtils.checkFound;
 import static org.sonar.server.ws.WsUtils.checkFoundWithOptional;
 import static org.sonar.server.ws.WsUtils.writeProtobuf;
@@ -147,7 +148,7 @@ public class UpdateAction implements UserGroupsWsAction {
     int membersCount = dbClient.groupMembershipDao().countMembers(dbSession, query);
 
     WsUserGroups.UpdateResponse.Builder respBuilder = WsUserGroups.UpdateResponse.newBuilder();
-    respBuilder.setGroup(support.toProtobuf(organization, group, membersCount));
+    respBuilder.setGroup(toProtobuf(organization, group, membersCount));
     writeProtobuf(respBuilder.build(), request, response);
   }
 }

@@ -67,7 +67,7 @@ public class CreateActionTest {
       .execute()
       .assertJson("{" +
         "  \"group\": {" +
-        "    \"organizationKey\": \"" + getDefaultOrganization().getKey() + "\"," +
+        "    \"organization\": \"" + getDefaultOrganization().getKey() + "\"," +
         "    \"name\": \"some-product-bu\"," +
         "    \"description\": \"Business Unit for Some Awesome Product\"," +
         "    \"membersCount\": 0" +
@@ -83,13 +83,13 @@ public class CreateActionTest {
 
     loginAsAdmin();
     newRequest()
-      .setParam("organizationKey", org.getKey())
+      .setParam("organization", org.getKey())
       .setParam("name", "some-product-bu")
       .setParam("description", "Business Unit for Some Awesome Product")
       .execute()
       .assertJson("{" +
         "  \"group\": {" +
-        "    \"organizationKey\": \"" + org.getKey() + "\"," +
+        "    \"organization\": \"" + org.getKey() + "\"," +
         "    \"name\": \"some-product-bu\"," +
         "    \"description\": \"Business Unit for Some Awesome Product\"," +
         "    \"membersCount\": 0" +
@@ -158,7 +158,7 @@ public class CreateActionTest {
 
     loginAsAdmin();
     newRequest()
-      .setParam("organizationKey", org.getKey())
+      .setParam("organization", org.getKey())
       .setParam("name", group.getName())
       .execute();
   }
@@ -172,12 +172,12 @@ public class CreateActionTest {
 
     loginAsAdmin();
     newRequest()
-      .setParam("organizationKey", org2.getKey())
+      .setParam("organization", org2.getKey())
       .setParam("name", name)
       .execute()
       .assertJson("{" +
         "  \"group\": {" +
-        "    \"organizationKey\": \"" + org2.getKey() + "\"," +
+        "    \"organization\": \"" + org2.getKey() + "\"," +
         "    \"name\": \"" + group.getName() + "\"," +
         "  }" +
         "}");

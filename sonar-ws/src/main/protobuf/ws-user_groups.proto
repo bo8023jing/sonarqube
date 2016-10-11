@@ -36,7 +36,7 @@ message UpdateResponse {
 
 message Group {
   optional int64 id = 1;
-  optional string organizationKey = 2;
+  optional string organization = 2;
   optional string name = 3;
   optional string description = 4;
   optional int32 membersCount = 5;

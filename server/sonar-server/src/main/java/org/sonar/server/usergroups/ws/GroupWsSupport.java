@@ -43,7 +43,7 @@ import static org.sonar.server.ws.WsUtils.checkRequest;
 public class GroupWsSupport {
 
   static final String PARAM_GROUP_ID = "id";
-  static final String PARAM_ORGANIZATION_KEY = "organizationKey";
+  static final String PARAM_ORGANIZATION_KEY = "organization";
   static final String PARAM_GROUP_NAME = "name";
   static final String PARAM_GROUP_DESCRIPTION = "description";
   static final String PARAM_LOGIN = "login";
@@ -170,7 +170,7 @@ public class GroupWsSupport {
   static WsUserGroups.Group.Builder toProtobuf(OrganizationDto organization, GroupDto group, int membersCount) {
     WsUserGroups.Group.Builder wsGroup = WsUserGroups.Group.newBuilder()
       .setId(group.getId())
-      .setOrganizationKey(organization.getKey())
+      .setOrganization(organization.getKey())
       .setName(group.getName())
       .setMembersCount(membersCount);
     if (group.getDescription() != null) {

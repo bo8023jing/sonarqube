@@ -162,7 +162,7 @@ public class SearchActionTest {
 
     loginAsSimpleUser();
     newRequest()
-      .setParam("organizationKey", org.getKey())
+      .setParam("organization", org.getKey())
       .execute()
       .assertJson(
         "{\"total\":1,\"p\":1,\"ps\":100," +
